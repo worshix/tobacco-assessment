@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -43,7 +43,8 @@ interface AnalysisResult {
   historicalNDVI: { date: string; value: number }[];
 }
 
-export default function AnalysisResultsPage({ params }: { params: { fieldId: string } }) {
+export default function AnalysisResultsPage({ params }: { params: Promise<{ fieldId: string }> }) {
+  const { fieldId } = use(params);
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState<AnalysisResult | null>(null);
 
@@ -53,7 +54,7 @@ export default function AnalysisResultsPage({ params }: { params: { fieldId: str
         const response = await fetch("/api/analyse", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fieldId: params.fieldId }),
+          body: JSON.stringify({ fieldId }),
         });
         
         if (!response.ok) throw new Error("Failed to analyze");
@@ -85,7 +86,7 @@ export default function AnalysisResultsPage({ params }: { params: { fieldId: str
     }
 
     runAnalysis();
-  }, [params.fieldId]);
+  }, [fieldId]);
 
   if (loading) {
     return (

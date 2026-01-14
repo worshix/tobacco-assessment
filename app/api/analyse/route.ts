@@ -57,12 +57,16 @@ export async function POST(req: Request) {
         healthStatus: healthStatus,
         meanNDVI: simulatedFeatures.mean_ndvi,
         ndviTrend: simulatedFeatures.ndvi_trend > 0 ? "IMPROVING" : simulatedFeatures.ndvi_trend < -0.01 ? "DECLINING" : "STABLE",
-        recommendations: JSON.stringify(recommendations),
-        dataPoints: JSON.stringify({
+        avgTemperature: simulatedFeatures.avg_temperature_c,
+        totalRainfall: simulatedFeatures.total_rainfall_mm,
+        waterStressRisk: simulatedFeatures.total_rainfall_mm < 10 && simulatedFeatures.mean_ndvi < 0.45,
+        diseaseRisk: simulatedFeatures.ndvi_variance > 0.05,
+        rawData: JSON.stringify({
             temp: simulatedFeatures.avg_temperature_c,
             rain: simulatedFeatures.total_rainfall_mm,
             variance: simulatedFeatures.ndvi_variance
-        })
+        }),
+        recommendations: JSON.stringify(recommendations),
       }
     });
 
