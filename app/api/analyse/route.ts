@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 import { predictCropHealth, MLFeatures } from "@/lib/ml/inference";
 import { getRecommendations } from "@/lib/analysis/recommendations";
+import { getSatelliteData } from "@/lib/gee/satellite";
 
 export async function POST(req: Request) {
   try {
@@ -28,26 +29,35 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Field not found or access denied" }, { status: 404 });
     }
 
-    // 2. Simulate sensor/satellite data for prototype
-    // In production, this data would come from GEE API for the field.polygon
-    const simulatedFeatures: MLFeatures = {
-      mean_ndvi: 0.58 + Math.random() * 0.1,
-      ndvi_trend: 0.02 + (Math.random() - 0.5) * 0.05,
-      ndvi_variance: 0.03 + Math.random() * 0.04,
-      avg_temperature_c: 26 + Math.random() * 5,
-      total_rainfall_mm: 5 + Math.random() * 15,
+    // 2. Parse polygon and get REAL satellite data
+    let polygon;
+    try {
+      polygon = typeof field.polygon === 'string' ? JSON.parse(field.polygon) : field.polygon;
+    } catch (e) {
+      return NextResponse.json({ error: "Invalid polygon data" }, { status: 400 });
+    }
+
+    // Fetch real satellite and weather data
+    const satelliteData = await getSatelliteData(polygon);
+
+    const features: MLFeatures = {
+      mean_ndvi: satelliteData.mean_ndvi,
+      ndvi_trend: satelliteData.ndvi_trend,
+      ndvi_variance: satelliteData.ndvi_variance,
+      avg_temperature_c: satelliteData.avg_temperature_c,
+      total_rainfall_mm: satelliteData.total_rainfall_mm,
     };
 
     // 3. Run Inference
-    const healthStatus = predictCropHealth(simulatedFeatures);
+    const healthStatus = predictCropHealth(features);
 
     // 4. Get Recommendations
     const recommendations = getRecommendations({
-      meanNDVI: simulatedFeatures.mean_ndvi,
-      trend: simulatedFeatures.ndvi_trend > 0 ? "IMPROVING" : simulatedFeatures.ndvi_trend < -0.01 ? "DECLINING" : "STABLE",
-      avgTemp: simulatedFeatures.avg_temperature_c,
-      totalRainfall: simulatedFeatures.total_rainfall_mm,
-      ndviVariance: simulatedFeatures.ndvi_variance,
+      meanNDVI: features.mean_ndvi,
+      trend: features.ndvi_trend > 0 ? "IMPROVING" : features.ndvi_trend < -0.01 ? "DECLINING" : "STABLE",
+      avgTemp: features.avg_temperature_c,
+      totalRainfall: features.total_rainfall_mm,
+      ndviVariance: features.ndvi_variance,
     });
 
     // 5. Save Analysis to DB
@@ -55,16 +65,18 @@ export async function POST(req: Request) {
       data: {
         fieldId: fieldId,
         healthStatus: healthStatus,
-        meanNDVI: simulatedFeatures.mean_ndvi,
-        ndviTrend: simulatedFeatures.ndvi_trend > 0 ? "IMPROVING" : simulatedFeatures.ndvi_trend < -0.01 ? "DECLINING" : "STABLE",
-        avgTemperature: simulatedFeatures.avg_temperature_c,
-        totalRainfall: simulatedFeatures.total_rainfall_mm,
-        waterStressRisk: simulatedFeatures.total_rainfall_mm < 10 && simulatedFeatures.mean_ndvi < 0.45,
-        diseaseRisk: simulatedFeatures.ndvi_variance > 0.05,
+        meanNDVI: features.mean_ndvi,
+        ndviTrend: features.ndvi_trend > 0 ? "IMPROVING" : features.ndvi_trend < -0.01 ? "DECLINING" : "STABLE",
+        avgTemperature: features.avg_temperature_c,
+        totalRainfall: features.total_rainfall_mm,
+        waterStressRisk: features.total_rainfall_mm < 10 && features.mean_ndvi < 0.45,
+        diseaseRisk: features.ndvi_variance > 0.05,
         rawData: JSON.stringify({
-            temp: simulatedFeatures.avg_temperature_c,
-            rain: simulatedFeatures.total_rainfall_mm,
-            variance: simulatedFeatures.ndvi_variance
+            temp: features.avg_temperature_c,
+            rain: features.total_rainfall_mm,
+            variance: features.ndvi_variance,
+            source: satelliteData.source,
+            region_type: satelliteData.region_type,
         }),
         recommendations: JSON.stringify(recommendations),
       }
@@ -72,9 +84,11 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
         id: analysis.id,
-        ...simulatedFeatures,
+        ...features,
         healthStatus,
-        recommendations
+        recommendations,
+        dataSource: satelliteData.source,
+        regionType: satelliteData.region_type,
     });
   } catch (error) {
     console.error("Analysis Error:", error);

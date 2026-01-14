@@ -39,7 +39,7 @@ export default async function DashboardPage() {
     return {
       id: f.id,
       name: f.name,
-      location: "Mashonaland West", // Simplified for now
+      location: f.location || "Unknown Location",
       lastAnalysis: lastAnalysis ? new Date(lastAnalysis.createdAt).toLocaleDateString() : "No analysis yet",
       status: lastAnalysis?.healthStatus || "UNKNOWN",
     };

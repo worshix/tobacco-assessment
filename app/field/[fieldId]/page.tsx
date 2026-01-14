@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Leaf, ArrowLeft, Info, Play } from "lucide-react";
 import FieldMap from "@/components/Map/FieldMap";
+import { DeleteFieldButton } from "@/components/DeleteFieldButton";
 
 export default async function FieldOverviewPage({ params }: { params: { fieldId: string } }) {
   const cookieStore = await cookies();
@@ -128,9 +129,7 @@ export default async function FieldOverviewPage({ params }: { params: { fieldId:
                   <p className="text-sm text-slate-700 font-medium">{new Date(field.createdAt).toLocaleDateString()}</p>
                 </div>
                 <div className="pt-4 mt-4 border-t border-slate-100">
-                   <Button variant="outline" className="w-full text-red-500 border-red-100 hover:bg-red-50 hover:text-red-600 transition-colors">
-                      Delete Field
-                   </Button>
+                   <DeleteFieldButton fieldId={field.id} fieldName={field.name} />
                 </div>
               </CardContent>
             </Card>

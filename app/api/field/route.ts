@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
+import { calculatePolygonArea, getPolygonCentroid, reverseGeocode, extractCoordinates } from "@/lib/geo/utils";
 
 export async function POST(req: Request) {
   try {
@@ -17,10 +18,26 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing name or polygon" }, { status: 400 });
     }
 
+    // Extract coordinates and calculate area
+    const coordinates = extractCoordinates(polygon);
+    let area: number | null = null;
+    let location: string | null = null;
+
+    if (coordinates) {
+      // Calculate area in hectares
+      area = Math.round(calculatePolygonArea(coordinates) * 100) / 100;
+      
+      // Get centroid and reverse geocode for location
+      const centroid = getPolygonCentroid(coordinates);
+      location = await reverseGeocode(centroid.lat, centroid.lng);
+    }
+
     const field = await prisma.field.create({
       data: {
         name,
         polygon: JSON.stringify(polygon),
+        area,
+        location,
         userId,
       },
     });

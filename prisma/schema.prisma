@@ -23,6 +23,8 @@ model Field {
   name      String
   cropType  String   @default("Tobacco")
   polygon   String   // GeoJSON stored as string
+  area      Float?   // Calculated area in hectares
+  location  String?  // Reverse geocoded location name
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   analyses  Analysis[]
