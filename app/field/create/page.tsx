@@ -9,23 +9,18 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Leaf, ArrowLeft, Map as MapIcon, Save } from "lucide-react";
 import FieldMap from "@/components/Map/FieldMap";
-import PolygonDrawer from "@/components/Map/PolygonDrawer";
 
 export default function CreateFieldPage() {
   const router = useRouter();
   const [fieldName, setFieldName] = useState("");
   const [polygon, setPolygon] = useState<any>(null);
 
-  const onUpdate = useCallback((e: any) => {
-    setPolygon(e.features[0]);
-  }, []);
-
-  const onCreate = useCallback((e: any) => {
-    setPolygon(e.features[0]);
-  }, []);
-
-  const onDelete = useCallback(() => {
-    setPolygon(null);
+  const onPolygonCreated = useCallback((data: any) => {
+    if (data && data.features && data.features[0]) {
+      setPolygon(data.features[0]);
+    } else {
+      setPolygon(null);
+    }
   }, []);
 
   const [loading, setLoading] = useState(false);
@@ -130,13 +125,10 @@ export default function CreateFieldPage() {
 
         {/* Map Area */}
         <div className="flex-1 relative bg-slate-200">
-          <FieldMap>
-            <PolygonDrawer 
-              onCreate={onCreate}
-              onUpdate={onUpdate}
-              onDelete={onDelete}
-            />
-          </FieldMap>
+          <FieldMap 
+            editable={true}
+            onPolygonCreated={onPolygonCreated}
+          />
         </div>
       </main>
     </div>
