@@ -104,7 +104,7 @@ export default function AnalysisResultsPage({ params }: { params: Promise<{ fiel
     <div className="flex min-h-screen flex-col bg-slate-50">
       <header className="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-200 sticky top-0 z-10">
         <div className="flex items-center gap-4">
-          <Link href={`/field/${params.fieldId}`}>
+          <Link href={`/field/${fieldId}`}>
             <Button variant="ghost" size="icon" className="text-slate-500">
               <ArrowLeft className="h-5 w-5" />
             </Button>

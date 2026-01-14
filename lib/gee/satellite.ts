@@ -14,6 +14,7 @@ export interface SatelliteData {
   avg_temperature_c: number;
   total_rainfall_mm: number;
   data_source: string;
+  region_type: string;
   observation_date: string;
 }
 
@@ -174,6 +175,13 @@ export async function getSatelliteData(polygon: any): Promise<SatelliteData> {
   
   const centroid = getPolygonCentroid(coordinates);
   
+  // Determine region type for metadata
+  const regionType = isAridRegion(centroid.lat, centroid.lng) 
+    ? 'arid' 
+    : isTropicalRegion(centroid.lat, centroid.lng) 
+      ? 'tropical' 
+      : 'temperate';
+  
   // Fetch data in parallel
   const [ndviData, weatherData] = await Promise.all([
     fetchNDVIData(coordinates),
@@ -187,6 +195,7 @@ export async function getSatelliteData(polygon: any): Promise<SatelliteData> {
     avg_temperature_c: Math.round(weatherData.avgTemp * 10) / 10,
     total_rainfall_mm: Math.round(weatherData.totalRain * 10) / 10,
     data_source: 'Open-Meteo + Geolocation Analysis',
+    region_type: regionType,
     observation_date: new Date().toISOString().split('T')[0],
   };
 }

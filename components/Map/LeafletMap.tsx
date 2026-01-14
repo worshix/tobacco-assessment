@@ -114,9 +114,6 @@ export default function LeafletMap({
                   },
                 },
               }}
-              edit={{
-                featureGroup: featureGroupRef.current!,
-              }}
             />
           </FeatureGroup>
         )}

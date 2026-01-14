@@ -75,7 +75,7 @@ export async function POST(req: Request) {
             temp: features.avg_temperature_c,
             rain: features.total_rainfall_mm,
             variance: features.ndvi_variance,
-            source: satelliteData.source,
+            source: satelliteData.data_source,
             region_type: satelliteData.region_type,
         }),
         recommendations: JSON.stringify(recommendations),
@@ -87,7 +87,7 @@ export async function POST(req: Request) {
         ...features,
         healthStatus,
         recommendations,
-        dataSource: satelliteData.source,
+        dataSource: satelliteData.data_source,
         regionType: satelliteData.region_type,
     });
   } catch (error) {
