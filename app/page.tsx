@@ -1,65 +1,102 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Leaf, AlertTriangle, Lightbulb, ArrowRight } from "lucide-react";
 
-export default function Home() {
+export default function LandingPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="flex min-h-screen flex-col bg-slate-50">
+      {/* Navigation */}
+      <nav className="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-200">
+        <div className="flex items-center gap-2">
+          <div className="bg-emerald-600 p-1.5 rounded-lg">
+            <Leaf className="h-6 w-6 text-white" />
+          </div>
+          <span className="text-xl font-bold text-slate-900 tracking-tight">TobaccoGuard</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <Link href="/auth/login">
+            <Button variant="ghost" className="text-slate-600 hover:text-slate-900">Login</Button>
+          </Link>
+          <Link href="/auth/signup">
+            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">Sign Up</Button>
+          </Link>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <main className="flex-1">
+        <section className="px-6 py-20 md:py-32 max-w-5xl mx-auto text-center">
+          <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 mb-6 tracking-tight">
+            Monitor your tobacco field <br />
+            <span className="text-emerald-600">using satellite data</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-lg md:text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+            Get actionable insights into your crop's health, detect stress early, and receive smart recommendations to maximize your yield.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/auth/signup">
+              <Button size="lg" className="h-14 px-8 text-lg bg-emerald-600 hover:bg-emerald-700 text-white gap-2">
+                Get Started Now <ArrowRight className="h-5 w-5" />
+              </Button>
+            </Link>
+            <Link href="/auth/login">
+              <Button size="lg" variant="outline" className="h-14 px-8 text-lg border-slate-200 text-slate-600 hover:bg-slate-50">
+                View Demo
+              </Button>
+            </Link>
+          </div>
+        </section>
+
+        {/* Benefits Section */}
+        <section className="bg-white py-20 px-6 border-y border-slate-200">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-3xl font-bold text-center text-slate-900 mb-16">Why use TobaccoGuard?</h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              <Card className="border-none shadow-none bg-slate-50/50">
+                <CardHeader>
+                  <div className="bg-emerald-100 w-12 h-12 rounded-full flex items-center justify-center mb-4">
+                    <Leaf className="h-6 w-6 text-emerald-600" />
+                  </div>
+                  <CardTitle className="text-xl font-bold">Crop health monitoring</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-slate-600">Track the vegetation index (NDVI) of your field in real-time using high-resolution satellite imagery.</p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-none shadow-none bg-slate-50/50">
+                <CardHeader>
+                  <div className="bg-amber-100 w-12 h-12 rounded-full flex items-center justify-center mb-4">
+                    <AlertTriangle className="h-6 w-6 text-amber-600" />
+                  </div>
+                  <CardTitle className="text-xl font-bold">Early stress detection</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-slate-600">Identify water stress or potential disease outbreaks before they become visible to the naked eye.</p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-none shadow-none bg-slate-50/50">
+                <CardHeader>
+                  <div className="bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center mb-4">
+                    <Lightbulb className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <CardTitle className="text-xl font-bold">Smart recommendations</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-slate-600">Receive precise advice on irrigation and field management based on weather and satellite data.</p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
       </main>
+
+      {/* Footer */}
+      <footer className="py-12 px-6 border-t border-slate-200 text-center text-slate-500 text-sm">
+        <p>© 2026 TobaccoGuard. All rights reserved.</p>
+      </footer>
     </div>
   );
 }
