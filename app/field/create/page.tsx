@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -8,14 +8,51 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Leaf, ArrowLeft, Map as MapIcon, Save } from "lucide-react";
+import FieldMap from "@/components/Map/FieldMap";
+import PolygonDrawer from "@/components/Map/PolygonDrawer";
 
 export default function CreateFieldPage() {
   const router = useRouter();
   const [fieldName, setFieldName] = useState("");
+  const [polygon, setPolygon] = useState<any>(null);
 
-  const handleSave = () => {
-    // Simulate save
-    router.push("/dashboard");
+  const onUpdate = useCallback((e: any) => {
+    setPolygon(e.features[0]);
+  }, []);
+
+  const onCreate = useCallback((e: any) => {
+    setPolygon(e.features[0]);
+  }, []);
+
+  const onDelete = useCallback(() => {
+    setPolygon(null);
+  }, []);
+
+  const [loading, setLoading] = useState(false);
+
+  const handleSave = async () => {
+    if (!fieldName || !polygon) {
+      alert("Please name your field and draw its boundary on the map.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/field", {
+        method: "POST",
+        body: JSON.stringify({ name: fieldName, polygon }),
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!res.ok) throw new Error("Failed to save field");
+
+      router.push("/dashboard");
+    } catch (error) {
+      console.error(error);
+      alert("Error saving field. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -35,8 +72,13 @@ export default function CreateFieldPage() {
             <h1 className="text-lg font-bold text-slate-900">Create New Field</h1>
           </div>
         </div>
-        <Button onClick={handleSave} className="bg-emerald-600 hover:bg-emerald-700 gap-2">
-          <Save className="h-4 w-4" /> Save Field
+        <Button 
+          onClick={handleSave} 
+          className="bg-emerald-600 hover:bg-emerald-700 gap-2"
+          disabled={loading}
+        >
+          <Save className="h-4 w-4" /> 
+          {loading ? "Saving..." : "Save Field"}
         </Button>
       </header>
 
@@ -88,27 +130,13 @@ export default function CreateFieldPage() {
 
         {/* Map Area */}
         <div className="flex-1 relative bg-slate-200">
-          {/* Mock Map View */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-50 flex-col gap-4">
-             <div className="bg-white p-8 rounded-2xl shadow-sm text-center">
-                <MapIcon className="h-16 w-16 text-slate-400 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-slate-900">Interactive Map</h3>
-                <p className="text-slate-500 max-w-xs">Mapbox implementation placeholder. <br/> Drawing tool active.</p>
-             </div>
-          </div>
-
-          {/* Map Controls Mock */}
-          <div className="absolute top-4 right-4 flex flex-col gap-2">
-            <Button size="icon" className="bg-white hover:bg-slate-100 text-slate-900 shadow-md">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 3 18 18m-9-18 9 9-9 9-9-9 9-9Z"/></svg>
-            </Button>
-            <Button size="icon" className="bg-white hover:bg-slate-100 text-slate-900 shadow-md">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-            </Button>
-            <Button size="icon" className="bg-white hover:bg-slate-100 text-slate-900 shadow-md">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/></svg>
-            </Button>
-          </div>
+          <FieldMap>
+            <PolygonDrawer 
+              onCreate={onCreate}
+              onUpdate={onUpdate}
+              onDelete={onDelete}
+            />
+          </FieldMap>
         </div>
       </main>
     </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -11,10 +12,35 @@ import { Leaf } from "lucide-react";
 export default function LoginPage() {
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate login
-    router.push("/dashboard");
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Login failed");
+      }
+
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -33,16 +59,40 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg border border-red-100">
+                {error}
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="john@example.com" required className="border-slate-200 focus:border-emerald-500" />
+              <Input 
+                id="email" 
+                type="email" 
+                placeholder="john@example.com" 
+                required 
+                className="border-slate-200 focus:border-emerald-500" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required className="border-slate-200 focus:border-emerald-500" />
+              <Input 
+                id="password" 
+                type="password" 
+                required 
+                className="border-slate-200 focus:border-emerald-500" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
-            <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-11">
-              Log In
+            <Button 
+              type="submit" 
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-11"
+              disabled={loading}
+            >
+              {loading ? "Logging in..." : "Log In"}
             </Button>
           </form>
         </CardContent>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -10,11 +11,36 @@ import { Leaf } from "lucide-react";
 
 export default function SignupPage() {
   const router = useRouter();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate signup
-    router.push("/field/create");
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        body: JSON.stringify({ name, email, password }),
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Signup failed");
+      }
+
+      router.push("/field/create");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -33,24 +59,55 @@ export default function SignupPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg border border-red-100">
+                {error}
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
-              <Input id="name" placeholder="John Doe" required className="border-slate-200 focus:border-emerald-500" />
+              <Input 
+                id="name" 
+                placeholder="John Doe" 
+                required 
+                className="border-slate-200 focus:border-emerald-500" 
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="john@example.com" required className="border-slate-200 focus:border-emerald-500" />
+              <Input 
+                id="email" 
+                type="email" 
+                placeholder="john@example.com" 
+                required 
+                className="border-slate-200 focus:border-emerald-500" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required className="border-slate-200 focus:border-emerald-500" />
+              <Input 
+                id="password" 
+                type="password" 
+                required 
+                className="border-slate-200 focus:border-emerald-500" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="role">Role</Label>
               <Input id="role" value="Farmer" disabled className="bg-slate-50 border-slate-200" />
             </div>
-            <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-11">
-              Sign Up
+            <Button 
+              type="submit" 
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-11"
+              disabled={loading}
+            >
+              {loading ? "Creating account..." : "Sign Up"}
             </Button>
           </form>
         </CardContent>

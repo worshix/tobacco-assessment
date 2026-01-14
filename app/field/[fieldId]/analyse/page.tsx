@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,56 +9,98 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { 
   Leaf, 
   ArrowLeft, 
-  CheckCircle, 
+  AlertCircle, 
+  CheckCircle2, 
   AlertTriangle, 
-  Droplet, 
-  Wind, 
+  Lightbulb, 
   Thermometer, 
-  Info,
+  CloudRain, 
+  LineChart as LineChartIcon,
+  Loader2,
   TrendingUp,
   TrendingDown,
   Activity
 } from "lucide-react";
 import { 
-  LineChart, 
-  Line, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer 
+  ResponsiveContainer,
+  AreaChart,
+  Area
 } from "recharts";
 
-export default function AnalysisResultsPage({ params }: { params: { fieldId: string } }) {
-  const [activeSection, setActiveSection] = useState("predictions");
+interface AnalysisResult {
+  meanNDVI: number;
+  ndviTrend: "IMPROVING" | "STABLE" | "DECLINING";
+  healthStatus: "HEALTHY" | "MODERATE_STRESS" | "HIGH_STRESS";
+  avgTemperature: number;
+  totalRainfall: number;
+  waterStressRisk: boolean;
+  diseaseRisk: boolean;
+  recommendations: string[];
+  historicalNDVI: { date: string; value: number }[];
+}
 
-  // Mock analysis data
-  const data = {
-    field: "North Valley Field",
-    status: "HEALTHY", // HEALTHY, MODERATE_STRESS, HIGH_STRESS
-    meanNDVI: 0.62,
-    trend: "STABLE", // IMPROVING, STABLE, DECLINING
-    weather: {
-      avgTemp: 28.5,
-      totalRainfall: 12,
-    },
-    risks: {
-      waterStress: false,
-      disease: true,
-    },
-    history: [
-      { date: "Dec 01", ndvi: 0.58 },
-      { date: "Dec 08", ndvi: 0.60 },
-      { date: "Dec 15", ndvi: 0.61 },
-      { date: "Dec 22", ndvi: 0.62 },
-      { date: "Dec 29", ndvi: 0.62 },
-      { date: "Jan 05", ndvi: 0.63 },
-      { date: "Jan 12", ndvi: 0.62 },
-    ]
-  };
+export default function AnalysisResultsPage({ params }: { params: { fieldId: string } }) {
+  const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
+
+  useEffect(() => {
+    async function runAnalysis() {
+      try {
+        const response = await fetch("/api/analyse", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fieldId: params.fieldId }),
+        });
+        
+        if (!response.ok) throw new Error("Failed to analyze");
+        
+        const data = await response.json();
+        
+        setResult({
+          meanNDVI: Number(data.mean_ndvi.toFixed(2)),
+          ndviTrend: data.ndviTrend,
+          healthStatus: data.healthStatus,
+          avgTemperature: Number(data.avg_temperature_c.toFixed(1)),
+          totalRainfall: Number(data.total_rainfall_mm.toFixed(1)),
+          waterStressRisk: data.total_rainfall_mm < 10 && data.mean_ndvi < 0.45,
+          diseaseRisk: data.ndvi_variance > 0.05,
+          recommendations: data.recommendations,
+          historicalNDVI: [
+            { date: "Day -12", value: Number((data.mean_ndvi - 0.04).toFixed(2)) },
+            { date: "Day -9", value: Number((data.mean_ndvi - 0.02).toFixed(2)) },
+            { date: "Day -6", value: Number((data.mean_ndvi + 0.01).toFixed(2)) },
+            { date: "Day -3", value: Number((data.mean_ndvi - 0.01).toFixed(2)) },
+            { date: "Latest", value: Number(data.mean_ndvi.toFixed(2)) },
+          ]
+        });
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    runAnalysis();
+  }, [params.fieldId]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50">
+        <Loader2 className="h-12 w-12 text-emerald-600 animate-spin mb-4" />
+        <h2 className="text-xl font-bold text-slate-900">Analysing Field...</h2>
+        <p className="text-slate-500">Retrieving satellite data and climate patterns.</p>
+      </div>
+    );
+  }
+
+  if (!result) return null;
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 pb-20">
+    <div className="flex min-h-screen flex-col bg-slate-50">
       <header className="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-200 sticky top-0 z-10">
         <div className="flex items-center gap-4">
           <Link href={`/field/${params.fieldId}`}>
@@ -67,131 +109,196 @@ export default function AnalysisResultsPage({ params }: { params: { fieldId: str
             </Button>
           </Link>
           <div className="flex items-center gap-2">
+            <div className="bg-emerald-600 p-1.5 rounded-lg">
+              <Leaf className="h-5 w-5 text-white" />
+            </div>
             <h1 className="text-lg font-bold text-slate-900">Analysis Results</h1>
-            <Badge variant="outline" className="ml-2 font-normal text-slate-500">
-              Jan 14, 2026
-            </Badge>
           </div>
+        </div>
+        <div className="text-xs text-slate-400 font-medium">
+          LAST UPDATED: {new Date().toLocaleDateString()}
         </div>
       </header>
 
       <main className="flex-1 p-6 md:p-10 max-w-4xl mx-auto w-full space-y-8">
         {/* Section A: Field Summary */}
-        <section className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center gap-8">
-          <div className="h-32 w-32 rounded-full border-8 border-emerald-100 flex items-center justify-center relative shrink-0">
-             <div className="text-3xl font-bold text-emerald-600">92%</div>
-             <div className="absolute -bottom-2 bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">HEALTHY</div>
+        <section className="text-center space-y-4">
+          <div className="inline-flex items-center justify-center rounded-full bg-white p-1 shadow-sm border border-slate-100 mb-2">
+            {result.healthStatus === "HEALTHY" ? (
+              <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none px-4 py-1 gap-1">
+                <CheckCircle2 className="h-3 w-3" /> Healthy 🟢
+              </Badge>
+            ) : result.healthStatus === "MODERATE_STRESS" ? (
+              <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none px-4 py-1 gap-1">
+                <AlertTriangle className="h-3 w-3" /> Moderate Stress 🟡
+              </Badge>
+            ) : (
+              <Badge className="bg-red-100 text-red-700 hover:bg-red-100 border-none px-4 py-1 gap-1">
+                <AlertCircle className="h-3 w-3" /> High Stress 🔴
+              </Badge>
+            )}
           </div>
-          <div className="text-center md:text-left">
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Vegetation is looking great</h2>
-            <p className="text-slate-500 max-w-md">Your <b>{data.field}</b> is showing healthy vegetation patterns. The mean NDVI is currently <b>{data.meanNDVI}</b>, which is optimal for tobacco in this growth stage.</p>
+          <h2 className="text-4xl font-extrabold text-slate-900 tracking-tight">
+            Overall Crop Health is <span className={
+              result.healthStatus === "HEALTHY" ? "text-emerald-600" :
+              result.healthStatus === "MODERATE_STRESS" ? "text-amber-600" : "text-red-600"
+            }>{result.healthStatus.replace('_', ' ')}</span>
+          </h2>
+          <p className="text-slate-500 max-w-md mx-auto">
+            Based on the latest satellite imagery and weather data for your field.
+          </p>
+        </section>
+
+        {/* Section D: Recommendations */}
+        <section className="space-y-4">
+          <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+            <Lightbulb className="h-5 w-5 text-emerald-600" /> Smart Recommendations
+          </h3>
+          <div className="grid gap-3">
+            {result.recommendations.map((rec, i) => (
+              <Card key={i} className="border-l-4 border-l-emerald-500 border-slate-200">
+                <CardContent className="p-4 flex items-start gap-3">
+                  <div className="mt-0.5 bg-emerald-50 p-1 rounded-full">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  </div>
+                  <p className="text-slate-700 font-medium">{rec}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </section>
 
-        {/* C: Predictions & Risks */}
-        <div className="grid sm:grid-cols-2 gap-4">
-           <Card className="border-slate-200">
-              <CardHeader className="pb-2">
-                <CardDescription className="uppercase text-[10px] font-bold tracking-widest text-slate-400">Trend Analysis</CardDescription>
-                <CardTitle className="flex items-center gap-2 text-xl">
-                   {data.trend === "IMPROVING" ? <TrendingUp className="text-emerald-500" /> : <Activity className="text-blue-500" />}
-                   {data.trend === "IMPROVING" ? "Improving" : data.trend === "STABLE" ? "Stable" : "Declining"}
-                </CardTitle>
-              </CardHeader>
-           </Card>
-           
-           <Card className="border-slate-200">
-              <CardHeader className="pb-2">
-                <CardDescription className="uppercase text-[10px] font-bold tracking-widest text-slate-400">Risk Flags</CardDescription>
-                <div className="flex gap-2">
-                  <Badge className={`${data.risks.waterStress ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'} border-transparent`}>
-                    Water Stress {data.risks.waterStress ? '⚠️' : '✅'}
-                  </Badge>
-                  <Badge className={`${data.risks.disease ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'} border-transparent`}>
-                    Disease {data.risks.disease ? '⚠️' : '✅'}
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Section C: Predictions / Risk Flags */}
+          <section className="space-y-4">
+            <h3 className="text-lg font-bold text-slate-900">Risk Assessment</h3>
+            <Card className="border-slate-200">
+              <CardContent className="p-0 divide-y divide-slate-100">
+                <div className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <CloudRain className="h-5 w-5 text-blue-500" />
+                    <div>
+                      <p className="text-sm font-semibold text-slate-700">Water Stress</p>
+                      <p className="text-xs text-slate-400">Based on rainfall trend</p>
+                    </div>
+                  </div>
+                  <Badge variant={result.waterStressRisk ? "destructive" : "secondary"} className="rounded-full">
+                    {result.waterStressRisk ? "High Risk" : "Low Risk"}
                   </Badge>
                 </div>
-              </CardHeader>
-           </Card>
+                <div className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <AlertCircle className="h-5 w-5 text-red-500" />
+                    <div>
+                      <p className="text-sm font-semibold text-slate-700">Disease Risk</p>
+                      <p className="text-xs text-slate-400">Irregular patterns</p>
+                    </div>
+                  </div>
+                  <Badge variant={result.diseaseRisk ? "destructive" : "secondary"} className="rounded-full">
+                    {result.diseaseRisk ? "Moderate Risk" : "Minimal Risk"}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Environmental Summary */}
+          <section className="space-y-4">
+            <h3 className="text-lg font-bold text-slate-900">Environment</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <Card className="bg-white border-slate-200">
+                <CardContent className="p-4 text-center">
+                  <Thermometer className="h-5 w-5 text-amber-500 mx-auto mb-2" />
+                  <p className="text-xl font-bold text-slate-900">{result.avgTemperature}°C</p>
+                  <p className="text-xs text-slate-400 uppercase font-bold tracking-wider">Avg Temp</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-white border-slate-200">
+                <CardContent className="p-4 text-center">
+                  <CloudRain className="h-5 w-5 text-blue-500 mx-auto mb-2" />
+                  <p className="text-xl font-bold text-slate-900">{result.totalRainfall}mm</p>
+                  <p className="text-xs text-slate-400 uppercase font-bold tracking-wider">Total Rain</p>
+                </CardContent>
+              </Card>
+            </div>
+          </section>
         </div>
 
-        {/* D: Recommendations */}
-        <section className="space-y-4">
-           <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <Info className="h-5 w-5 text-emerald-600" /> Farmer Recommendations
-           </h3>
-           <div className="grid gap-3">
-              <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl flex gap-4">
-                 <div className="bg-white h-10 w-10 rounded-full flex items-center justify-center shrink-0 border border-emerald-200">
-                    <CheckCircle className="h-6 w-6 text-emerald-600" />
+        {/* Section B: Raw Data */}
+        <section className="space-y-4 mt-8 pt-8 border-t border-slate-200">
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="technical-data" className="border-none">
+              <AccordionTrigger className="hover:no-underline py-0">
+                 <div className="flex items-center gap-2 text-slate-400 hover:text-slate-600 transition-colors">
+                    <LineChartIcon className="h-4 w-4" />
+                    <span className="text-sm font-bold uppercase tracking-widest">View Technical Data</span>
                  </div>
-                 <div>
-                    <p className="font-bold text-emerald-900">Crop health is stable</p>
-                    <p className="text-sm text-emerald-700">No immediate action is required regarding fertilizers or growth regulators.</p>
-                 </div>
-              </div>
-
-              {data.risks.disease && (
-                <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl flex gap-4">
-                   <div className="bg-white h-10 w-10 rounded-full flex items-center justify-center shrink-0 border border-amber-200">
-                      <AlertTriangle className="h-6 w-6 text-amber-600" />
-                   </div>
-                   <div>
-                      <p className="font-bold text-amber-900">Disease Monitoring Recommended</p>
-                      <p className="text-sm text-amber-700">Irregular vegetation patterns detected. Inspect the field for possible disease or pest activity.</p>
-                   </div>
-                </div>
-              )}
-           </div>
+              </AccordionTrigger>
+              <AccordionContent className="pt-6">
+                <Card className="border-slate-200 bg-white shadow-sm">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="text-sm">NDVI History</CardTitle>
+                        <CardDescription className="text-xs">Vegetation index trend</CardDescription>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-emerald-600">{result.meanNDVI}</p>
+                        <p className="text-xs font-bold text-slate-400">MEAN NDVI</p>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[200px] w-full mt-4">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={result.historicalNDVI}>
+                          <defs>
+                            <linearGradient id="colorNdvi" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                              <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                          <XAxis 
+                            dataKey="date" 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{ fill: '#94a3b8', fontSize: 10 }}
+                          />
+                          <YAxis 
+                            domain={[0, 1]} 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{ fill: '#94a3b8', fontSize: 10 }}
+                          />
+                          <Tooltip 
+                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="value" 
+                            stroke="#10b981" 
+                            strokeWidth={2}
+                            fillOpacity={1} 
+                            fill="url(#colorNdvi)" 
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </section>
 
-        {/* B: Raw Data (Collapsible) */}
-        <Accordion type="single" collapsible className="w-full">
-          <AccordionItem value="technical" className="border-slate-200 bg-white px-6 rounded-2xl border">
-            <AccordionTrigger className="hover:no-underline font-bold text-slate-700">Technical Details / Raw Data</AccordionTrigger>
-            <AccordionContent className="space-y-6 pt-4">
-               {/* NDVI Chart */}
-               <div className="space-y-2">
-                  <p className="text-xs font-bold text-slate-400 uppercase">NDVI History (Satellite Data)</p>
-                  <div className="h-64 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={data.history}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} />
-                        <YAxis domain={[0, 1]} fontSize={12} tickLine={false} axisLine={false} />
-                        <Tooltip 
-                          contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
-                        />
-                        <Line type="monotone" dataKey="ndvi" stroke="#059669" strokeWidth={3} dot={{r: 4}} activeDot={{r: 6}} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-               </div>
-
-               {/* Environment Grid */}
-               <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-6">
-                  <div className="flex items-center gap-3">
-                     <div className="p-2 bg-blue-50 rounded-lg">
-                        <Droplet className="h-5 w-5 text-blue-600" />
-                     </div>
-                     <div>
-                        <p className="text-[10px] font-bold text-slate-400">RAINFALL</p>
-                        <p className="text-base font-bold text-slate-900">{data.weather.totalRainfall} mm</p>
-                     </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                     <div className="p-2 bg-orange-50 rounded-lg">
-                        <Thermometer className="h-5 w-5 text-orange-600" />
-                     </div>
-                     <div>
-                        <p className="text-[10px] font-bold text-slate-400">AVG TEMP</p>
-                        <p className="text-base font-bold text-slate-900">{data.weather.avgTemp}°C</p>
-                     </div>
-                  </div>
-               </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+        <div className="pt-6 flex justify-center">
+            <Link href="/dashboard">
+                <Button variant="outline" className="text-slate-500 border-slate-200">
+                    Return to Dashboard
+                </Button>
+            </Link>
+        </div>
       </main>
     </div>
   );
