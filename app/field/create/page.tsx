@@ -7,13 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Leaf, ArrowLeft, Map as MapIcon, Save } from "lucide-react";
+import { Leaf, ArrowLeft, Map as MapIcon, Save, MapPin } from "lucide-react";
 import FieldMap from "@/components/Map/FieldMap";
 
 export default function CreateFieldPage() {
   const router = useRouter();
   const [fieldName, setFieldName] = useState("");
   const [polygon, setPolygon] = useState<any>(null);
+  
+  // Coordinate inputs for quick navigation
+  const [latInput, setLatInput] = useState("");
+  const [lngInput, setLngInput] = useState("");
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
 
   const onPolygonCreated = useCallback((data: any) => {
     if (data && data.features && data.features[0]) {
@@ -24,6 +29,28 @@ export default function CreateFieldPage() {
   }, []);
 
   const [loading, setLoading] = useState(false);
+
+  const handleGoToCoordinates = () => {
+    const lat = parseFloat(latInput);
+    const lng = parseFloat(lngInput);
+    
+    if (isNaN(lat) || isNaN(lng)) {
+      alert("Please enter valid coordinates (e.g., Latitude: -17.83, Longitude: 31.05)");
+      return;
+    }
+    
+    if (lat < -90 || lat > 90) {
+      alert("Latitude must be between -90 and 90");
+      return;
+    }
+    
+    if (lng < -180 || lng > 180) {
+      alert("Longitude must be between -180 and 180");
+      return;
+    }
+    
+    setMapCenter({ lat, lng });
+  };
 
   const handleSave = async () => {
     if (!fieldName || !polygon) {
@@ -104,7 +131,44 @@ export default function CreateFieldPage() {
             <div className="space-y-2">
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">2</div>
               <p className="text-sm font-medium text-slate-700">Zoom to your farm</p>
-              <p className="text-xs text-slate-500">Navigate the map to find your cultivation area.</p>
+              <p className="text-xs text-slate-500">Enter your coordinates to quickly locate your field, or navigate manually.</p>
+              <div className="pt-2 space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor="latitude" className="text-xs text-slate-500">Latitude</Label>
+                    <Input 
+                      id="latitude" 
+                      type="number"
+                      step="any"
+                      value={latInput} 
+                      onChange={(e) => setLatInput(e.target.value)} 
+                      placeholder="e.g. -17.83" 
+                      className="border-slate-200 h-8 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="longitude" className="text-xs text-slate-500">Longitude</Label>
+                    <Input 
+                      id="longitude" 
+                      type="number"
+                      step="any"
+                      value={lngInput} 
+                      onChange={(e) => setLngInput(e.target.value)} 
+                      placeholder="e.g. 31.05" 
+                      className="border-slate-200 h-8 text-xs"
+                    />
+                  </div>
+                </div>
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleGoToCoordinates}
+                  className="w-full gap-2 text-xs"
+                >
+                  <MapPin className="h-3 w-3" /> Go to Location
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -128,6 +192,7 @@ export default function CreateFieldPage() {
           <FieldMap 
             editable={true}
             onPolygonCreated={onPolygonCreated}
+            goToLocation={mapCenter}
           />
         </div>
       </main>

@@ -25,6 +25,7 @@ interface LeafletMapProps {
   children?: React.ReactNode;
   onPolygonCreated?: (polygon: any) => void;
   editable?: boolean;
+  goToLocation?: { lat: number; lng: number } | null;
 }
 
 function MapUpdater({ center, zoom }: { center: [number, number]; zoom: number }) {
@@ -35,12 +36,25 @@ function MapUpdater({ center, zoom }: { center: [number, number]; zoom: number }
   return null;
 }
 
+function GoToLocationHandler({ location }: { location: { lat: number; lng: number } | null }) {
+  const map = useMap();
+  useEffect(() => {
+    if (location) {
+      map.flyTo([location.lat, location.lng], 16, {
+        duration: 1.5
+      });
+    }
+  }, [map, location]);
+  return null;
+}
+
 export default function LeafletMap({ 
   initialViewState, 
   polygon, 
   children, 
   onPolygonCreated,
-  editable = false 
+  editable = false,
+  goToLocation 
 }: LeafletMapProps) {
   const featureGroupRef = useRef<L.FeatureGroup>(null);
 
@@ -91,6 +105,8 @@ export default function LeafletMap({
           url="https://stamen-tiles.a.ssl.fastly.net/toner-labels/{z}/{x}/{y}.png"
           opacity={0.7}
         />
+
+        <GoToLocationHandler location={goToLocation} />
 
         {editable && (
           <FeatureGroup ref={featureGroupRef}>

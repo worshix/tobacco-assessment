@@ -13,6 +13,7 @@ interface FieldMapProps {
   children?: React.ReactNode;
   onPolygonCreated?: (polygon: any) => void;
   editable?: boolean;
+  goToLocation?: { lat: number; lng: number } | null;
 }
 
 // Dynamic import to avoid SSR issues with Leaflet
