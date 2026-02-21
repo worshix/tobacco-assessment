@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2025.11.22)  20 FEB 2026 11:13
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2025.11.22)  21 FEB 2026 12:46
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -421,7 +421,7 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
 
 ]
-<system_architecture_diagram.png, id=113, 727.0362pt x 871.5762pt>
+<system_architecture_diagram.png, id=120, 727.0362pt x 871.5762pt>
 File: system_architecture_diagram.png Graphic file (type png)
 <use system_architecture_diagram.png>
 Package pdftex.def Info: system_architecture_diagram.png  used on input line 75.
@@ -431,75 +431,75 @@ Overfull \hbox (0.94499pt too wide) in paragraph at lines 75--76
  [][] 
  []
 
-[2 <./system_architecture_diagram.png>]
-LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 126.
- (/usr/share/texlive/texmf-dist/tex/latex/psnfss/ot1pcr.fd
+[2]
+Underfull \hbox (badness 2221) in paragraph at lines 97--98
+[]\OT1/ptm/b/n/10 ndvi[]variance\OT1/ptm/m/n/10 : Spa-tial vari-ance of per-pixel NDVI
+ []
+
+LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 136.
+(/usr/share/texlive/texmf-dist/tex/latex/psnfss/ot1pcr.fd
 File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
 )
-Overfull \hbox (18.0pt too wide) in paragraph at lines 129--129
+Overfull \hbox (18.0pt too wide) in paragraph at lines 139--139
 []\OT1/pcr/m/n/10 IF mean_ndvi < 0.45 AND total_rainfall < 10mm[] 
  []
 
-LaTeX Font Info:    Trying to load font information for TS1+pcr on input line 150.
-(/usr/share/texlive/texmf-dist/tex/latex/psnfss/ts1pcr.fd
+[3 <./system_architecture_diagram.png>]
+LaTeX Font Info:    Trying to load font information for TS1+pcr on input line 160.
+ (/usr/share/texlive/texmf-dist/tex/latex/psnfss/ts1pcr.fd
 File: ts1pcr.fd 2001/06/04 font definitions for TS1/pcr.
 )
-Underfull \hbox (badness 10000) in paragraph at lines 168--169
+Underfull \hbox (badness 10000) in paragraph at lines 178--179
 []\OT1/pcr/m/n/10 crop_health_model.joblib\OT1/ptm/m/n/10 : Se-ri-al-ized scikit-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 169--170
+Underfull \hbox (badness 10000) in paragraph at lines 179--180
 []\OT1/pcr/m/n/10 crop_health_model.json\OT1/ptm/m/n/10 : Model weights in
  []
 
 
-Underfull \hbox (badness 2173) in paragraph at lines 172--173
+Underfull \hbox (badness 2173) in paragraph at lines 182--183
 []\OT1/pcr/m/n/10 confusion_matrix.png\OT1/ptm/m/n/10 : Vi-su-al-iza-tion of model
  []
 
-[3]
-<model_confusion_matrix.png, id=139, 578.16pt x 433.62pt>
+[4]
+<model_confusion_matrix.png, id=158, 578.16pt x 433.62pt>
 File: model_confusion_matrix.png Graphic file (type png)
 <use model_confusion_matrix.png>
-Package pdftex.def Info: model_confusion_matrix.png  used on input line 225.
+Package pdftex.def Info: model_confusion_matrix.png  used on input line 238.
 (pdftex.def)             Requested size: 252.94499pt x 189.70828pt.
 
-Overfull \hbox (0.94499pt too wide) in paragraph at lines 225--226
+Overfull \hbox (0.94499pt too wide) in paragraph at lines 238--239
  [][] 
  []
 
 
-Underfull \hbox (badness 1365) in paragraph at lines 254--255
-[]\OT1/ptm/b/n/10 Temporal Res-o-lu-tion: \OT1/ptm/m/n/10 The sys-tem cur-rently per-forms
- []
-
-[4 <./model_confusion_matrix.png>]
-Underfull \hbox (badness 2080) in paragraph at lines 268--269
+Underfull \hbox (badness 2080) in paragraph at lines 283--284
 []\OT1/ptm/b/n/10 Scalability: \OT1/ptm/m/n/10 The ar-chi-tec-ture sep-a-rates model train-ing
  []
 
-[5] (./research_paper.aux)
+[5 <./model_confusion_matrix.png>] [6] (./research_paper.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-22>
  ***********
 Package rerunfilecheck Info: File `research_paper.out' has not changed.
-(rerunfilecheck)             Checksum: 7C1A40C0A966E41BCA2B67E3A9153DD4;3434.
+(rerunfilecheck)             Checksum: 884DABE3DC32E04FEA502F9181F8B242;3885.
  ) 
 Here is how much of TeX's memory you used:
- 12661 strings out of 474222
- 194702 string characters out of 5748732
+ 12667 strings out of 474222
+ 194775 string characters out of 5748732
  1946975 words of memory out of 5000000
- 34708 multiletter control sequences out of 15000+600000
+ 34710 multiletter control sequences out of 15000+600000
  599199 words of font info for 122 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,6n,79p,1430b,539s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,6n,79p,1513b,587s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmbi8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on research_paper.pdf (5 pages, 261759 bytes).
+Output written on research_paper.pdf (6 pages, 266683 bytes).
 PDF statistics:
- 206 PDF objects out of 1000 (max. 8388607)
- 177 compressed objects within 2 object streams
- 50 named destinations out of 1000 (max. 500000)
- 179 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 219 PDF objects out of 1000 (max. 8388607)
+ 189 compressed objects within 2 object streams
+ 54 named destinations out of 1000 (max. 500000)
+ 195 words of extra memory for PDF output out of 10000 (max. 10000000)
 
