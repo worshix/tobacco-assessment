@@ -864,31 +864,52 @@ Figure~\ref{fig:ctx_new} presents the context diagram for the proposed system, s
 \centering
 \caption{Context Diagram — Proposed Satellite Crop Health Monitoring System}
 \label{fig:ctx_new}
-\begin{tikzpicture}[
-  entity/.style={draw=hitblue,fill=hitblue!10,rectangle,minimum width=2.6cm,minimum height=1.1cm,
-                 align=center,font=\small\bfseries,rounded corners=2pt},
-  system/.style={draw=hitblue,fill=hitblue!25,ellipse,minimum width=4cm,minimum height=2.5cm,
+\begin{tikzpicture}[scale=0.88,
+  entity/.style={draw=hitblue,fill=hitblue!10,rectangle,minimum width=2.8cm,minimum height=1.2cm,
+                 align=center,font=\small\bfseries,rounded corners=3pt},
+  system/.style={draw=hitblue,fill=hitblue!25,ellipse,minimum width=4.2cm,minimum height=2.8cm,
                  align=center,font=\small\bfseries},
-  arr/.style={->,>=Stealth,thick,draw=hitblue!70},
-  lbl/.style={font=\scriptsize,fill=white,inner sep=1pt}
+  arr/.style={->,>=Stealth,thick,draw=hitblue!80},
+  lbl/.style={font=\scriptsize,fill=white,inner sep=2pt,rounded corners=1pt}
 ]
   \node[system] (sys) at (0,0) {Satellite Crop\\Health Monitor\\System};
-  \node[entity] (farmer)   at (-6.5, 2)   {Farmer};
-  \node[entity] (agro)     at (-6.5,-2)   {Agronomist};
-  \node[entity] (gee)      at  (6.5, 2)   {Google\\Earth Engine};
-  \node[entity] (meteo)    at  (6.5,-2)   {Open-Meteo\\Weather API};
-  \node[entity] (admin)    at  (0,  4.5)  {System\\Administrator};
 
-  \draw[arr] (farmer) -- node[lbl,above]{Field polygon, login} (sys);
-  \draw[arr] (sys)    -- node[lbl,below]{Health status, recommendations} (farmer);
-  \draw[arr] (agro)   -- node[lbl,above]{Field selection} (sys);
-  \draw[arr] (sys)    -- node[lbl,below]{NDVI trends, heatmap} (agro);
-  \draw[arr] (sys)    -- node[lbl,above]{Field polygon, date range} (gee);
-  \draw[arr] (gee)    -- node[lbl,below]{NDVI time-series, spatial data} (sys);
-  \draw[arr] (sys)    -- node[lbl,above]{Coordinates, date range} (meteo);
-  \draw[arr] (meteo)  -- node[lbl,below]{Temperature, rainfall} (sys);
-  \draw[arr] (admin)  -- node[lbl,right]{User management, config} (sys);
-  \draw[arr] (sys)    -- node[lbl,left]{Audit logs, reports} (admin);
+  % External entities — compass positions
+  \node[entity] (farmer) at (-5.8,  2.8) {Farmer};
+  \node[entity] (agro)   at (-5.8, -2.8) {Agronomist};
+  \node[entity] (gee)    at ( 5.8,  2.8) {Google\\Earth Engine};
+  \node[entity] (meteo)  at ( 5.8, -2.8) {Open-Meteo\\Weather API};
+  \node[entity] (admin)  at ( 0,    5.0) {System\\Administrator};
+
+  % Farmer <-> sys (bent to separate labels)
+  \draw[arr] (farmer) to[bend right=12]
+    node[lbl,above,sloped,pos=0.45]{Field polygon, login} (sys);
+  \draw[arr] (sys) to[bend right=12]
+    node[lbl,below,sloped,pos=0.55]{Health status, recommendations} (farmer);
+
+  % Agronomist <-> sys
+  \draw[arr] (agro) to[bend left=12]
+    node[lbl,below,sloped,pos=0.45]{Field selection} (sys);
+  \draw[arr] (sys) to[bend left=12]
+    node[lbl,above,sloped,pos=0.55]{NDVI trends, heatmap} (agro);
+
+  % GEE <-> sys
+  \draw[arr] (sys) to[bend left=12]
+    node[lbl,above,sloped,pos=0.45]{Polygon, date range} (gee);
+  \draw[arr] (gee) to[bend left=12]
+    node[lbl,below,sloped,pos=0.55]{NDVI time-series} (sys);
+
+  % Open-Meteo <-> sys
+  \draw[arr] (sys) to[bend right=12]
+    node[lbl,below,sloped,pos=0.45]{Coordinates, date range} (meteo);
+  \draw[arr] (meteo) to[bend right=12]
+    node[lbl,above,sloped,pos=0.55]{Temperature, rainfall} (sys);
+
+  % Admin <-> sys (vertical, straight with slight offset)
+  \draw[arr] (admin) to[bend left=15]
+    node[lbl,right]{User management, config} (sys);
+  \draw[arr] (sys) to[bend left=15]
+    node[lbl,left]{Audit logs, reports} (admin);
 \end{tikzpicture}
 \end{figure}
 
@@ -1054,48 +1075,66 @@ Figure~\ref{fig:activity} presents the UML Activity Diagram for the primary crop
 \centering
 \caption{UML Activity Diagram — Crop Health Analysis Workflow}
 \label{fig:activity}
+\resizebox{0.72\linewidth}{!}{%
 \begin{tikzpicture}[
-  act/.style={draw=hitblue,fill=hitblue!10,rounded rectangle,minimum width=5.2cm,
-              minimum height=0.75cm,align=center,font=\small},
-  dec/.style={draw=hitblue,fill=amber!20,diamond,minimum width=2.2cm,
-              minimum height=0.9cm,align=center,font=\scriptsize},
-  start/.style={fill=hitblue,circle,minimum size=0.4cm},
-  stop/.style={draw=hitblue,circle,minimum size=0.4cm,
-               path picture={\fill[hitblue] (0,0) circle (0.15cm);}},
-  arr/.style={->,>=Stealth,draw=hitblue!80,thick}
+  % Simple rounded-rectangle activities
+  act/.style={draw=hitblue,fill=hitblue!10,rectangle,rounded corners=5pt,
+              minimum width=6.5cm,minimum height=0.85cm,
+              align=center,font=\normalsize},
+  % Diamond — aspect ratio > 1 makes it wider relative to height
+  dec/.style={draw=hitblue,fill=amber!20,diamond,aspect=2.8,
+              inner sep=8pt,align=center,font=\normalsize},
+  % Filled circle (start)
+  start/.style={fill=hitblue,circle,minimum size=0.55cm},
+  % Ring with filled inner circle (end)
+  stop/.style={draw=hitblue,circle,minimum size=0.55cm,line width=2pt,
+               path picture={\fill[hitblue](path picture bounding box.center)
+                              circle (0.15cm);}},
+  arr/.style={->,>=Stealth,draw=hitblue!80,line width=1.2pt}
 ]
-  \node[start] (s) at (0,0) {};
-  \node[act] (login)  at (0,-1.2) {Farmer Logs In};
-  \node[act] (select) at (0,-2.5) {Selects or Creates a Field};
-  \node[act] (draw)   at (0,-3.8) {Draws Field Polygon on Map};
-  \node[act] (trig)   at (0,-5.1) {Triggers Analysis};
-  \node[act] (gee)    at (0,-6.4) {System Queries GEE for Sentinel-2 NDVI};
-  \node[dec] (cloud)  at (0,-7.9) {Sufficient\\cloud-free\\scenes?};
-  \node[act] (warn)   at (5,-7.9) {Display cloud cover\\warning, use available\\data};
-  \node[act] (wx)     at (0,-9.4) {Retrieve Weather Data from Open-Meteo};
-  \node[act] (feat)   at (0,-10.7) {Compute Feature Vector};
-  \node[act] (ml)     at (0,-12.0) {Apply Logistic Regression Classifier};
-  \node[act] (rules)  at (0,-13.3) {Apply Recommendation Rules};
-  \node[act] (store)  at (0,-14.6) {Store Analysis in Database};
-  \node[act] (disp)   at (0,-15.9) {Display Results, Heatmap, Recommendations};
-  \node[stop] (e)     at (0,-17.0) {};
+  % ---- Nodes (1 unit = 1cm vertical step) ----
+  \node[start]  (s)      at (0,  0)    {};
+  \node[act]    (login)  at (0, -1.4)  {Farmer Logs In};
+  \node[act]    (select) at (0, -2.8)  {Selects or Creates a Field};
+  \node[act]    (draw)   at (0, -4.2)  {Draws Field Polygon on Map};
+  \node[act]    (trig)   at (0, -5.6)  {Triggers Analysis};
+  \node[act]    (gee)    at (0, -7.0)  {System Queries GEE for Sentinel-2 NDVI};
+  % Decision diamond — extra vertical gap for readability
+  \node[dec]    (cloud)  at (0, -9.0)  {Sufficient\\cloud-free scenes?};
+  % "No" branch — to the right, same y as diamond
+  \node[act]    (warn)   at (4.5,-9.0) {Display cloud-cover warning;\\proceed with available data};
+  \node[act]    (wx)     at (0,-11.0)  {Retrieve Weather Data from Open-Meteo};
+  \node[act]    (feat)   at (0,-12.4)  {Compute Feature Vector};
+  \node[act]    (ml)     at (0,-13.8)  {Apply Logistic Regression Classifier};
+  \node[act]    (rules)  at (0,-15.2)  {Apply Recommendation Rules};
+  \node[act]    (store)  at (0,-16.6)  {Store Analysis in Database};
+  \node[act]    (disp)   at (0,-18.0)  {Display Results, Heatmap, Recommendations};
+  \node[stop]   (e)      at (0,-19.4)  {};
 
-  \draw[arr] (s) -- (login);
-  \draw[arr] (login) -- (select);
+  % ---- Main flow ----
+  \draw[arr] (s)      -- (login);
+  \draw[arr] (login)  -- (select);
   \draw[arr] (select) -- (draw);
-  \draw[arr] (draw) -- (trig);
-  \draw[arr] (trig) -- (gee);
-  \draw[arr] (gee) -- (cloud);
-  \draw[arr] (cloud) -- node[left,font=\scriptsize]{Yes} (wx);
-  \draw[arr] (cloud) -- node[above,font=\scriptsize]{No} (warn);
-  \draw[arr] (warn) |- (wx);
-  \draw[arr] (wx) -- (feat);
-  \draw[arr] (feat) -- (ml);
-  \draw[arr] (ml) -- (rules);
+  \draw[arr] (draw)   -- (trig);
+  \draw[arr] (trig)   -- (gee);
+  \draw[arr] (gee)    -- (cloud);
+
+  % ---- Decision branches ----
+  % "Yes" — straight down from diamond south
+  \draw[arr] (cloud.south) -- node[left,font=\large\bfseries,pos=0.3]{Yes} (wx.north);
+  % "No"  — right from diamond east, then down-and-left back to main flow
+  \draw[arr] (cloud.east)  -- node[above,font=\large\bfseries]{No} (warn.west);
+  \draw[arr] (warn.south)  |- (wx.east);
+
+  % ---- Rest of main flow ----
+  \draw[arr] (wx)    -- (feat);
+  \draw[arr] (feat)  -- (ml);
+  \draw[arr] (ml)    -- (rules);
   \draw[arr] (rules) -- (store);
   \draw[arr] (store) -- (disp);
-  \draw[arr] (disp) -- (e);
-\end{tikzpicture}
+  \draw[arr] (disp)  -- (e);
+\end{tikzpicture}%
+}
 \end{figure}
 
 \subsection{UML Class Diagram}
@@ -1106,71 +1145,81 @@ Figure~\ref{fig:class} presents the UML Class Diagram for the system's data mode
 \centering
 \caption{UML Class Diagram — System Data Model}
 \label{fig:class}
+\resizebox{\linewidth}{!}{%
 \begin{tikzpicture}[
-  class/.style={draw=hitblue,fill=hitblue!5,rectangle split, rectangle split parts=3,
-                minimum width=5cm, font=\small, align=left},
-  arr/.style={->,>=open triangle 60,draw=hitblue,thick},
-  compo/.style={->,>=diamond,draw=hitblue,thick}
+  class/.style={draw=hitblue,fill=hitblue!5,rectangle split,rectangle split parts=3,
+                minimum width=5.8cm,font=\normalsize,align=left,
+                rectangle split part fill={hitblue!25,hitblue!5,hitblue!5}},
+  link/.style={draw=hitblue,thick,>=open triangle 60},
+  lbl/.style={font=\small,fill=white,inner sep=2pt}
 ]
-  % User class
+  %% ---- User (left column, centred vertically on Field) ----
   \node[class] (user) at (0,0) {
-    \textbf{User}
+    \textbf{\ User}
     \nodepart{two}
-    \texttt{id: String (CUID)} \\
-    \texttt{name: String} \\
-    \texttt{email: String [unique]} \\
-    \texttt{password: String (bcrypt)} \\
+    \texttt{id: String (CUID)} \\[2pt]
+    \texttt{name: String} \\[2pt]
+    \texttt{email: String [unique]} \\[2pt]
+    \texttt{password: String (bcrypt)} \\[2pt]
     \texttt{createdAt: DateTime}
     \nodepart{three}
-    \texttt{+register()} \\
-    \texttt{+authenticate()} \\
+    \texttt{+register()} \\[2pt]
+    \texttt{+authenticate()} \\[2pt]
     \texttt{+logout()}
   };
 
-  % Field class
-  \node[class] (field) at (7.5,0) {
-    \textbf{Field}
+  %% ---- Field (right column, same baseline as User) ----
+  \node[class] (field) at (8,0) {
+    \textbf{\ Field}
     \nodepart{two}
-    \texttt{id: String (CUID)} \\
-    \texttt{name: String} \\
-    \texttt{cropType: String} \\
-    \texttt{polygon: String (GeoJSON)} \\
-    \texttt{area: Float? (ha)} \\
-    \texttt{location: String?} \\
-    \texttt{userId: String (FK)} \\
+    \texttt{id: String (CUID)} \\[2pt]
+    \texttt{name: String} \\[2pt]
+    \texttt{cropType: String} \\[2pt]
+    \texttt{polygon: String (GeoJSON)} \\[2pt]
+    \texttt{area: Float? (ha)} \\[2pt]
+    \texttt{location: String?} \\[2pt]
+    \texttt{userId: String (FK)} \\[2pt]
     \texttt{createdAt: DateTime}
     \nodepart{three}
-    \texttt{+calculateArea()} \\
-    \texttt{+getCentroid()} \\
+    \texttt{+calculateArea()} \\[2pt]
+    \texttt{+getCentroid()} \\[2pt]
     \texttt{+triggerAnalysis()}
   };
 
-  % Analysis class
-  \node[class] (analysis) at (7.5,-5.8) {
-    \textbf{Analysis}
+  %% ---- Analysis (below Field — far enough to clear Field.south) ----
+  \node[class] (analysis) at (8,-12.5) {
+    \textbf{\ Analysis}
     \nodepart{two}
-    \texttt{id: String (CUID)} \\
-    \texttt{fieldId: String (FK)} \\
-    \texttt{meanNDVI: Float} \\
-    \texttt{ndviTrend: NDVITrend \{enum\}} \\
-    \texttt{healthStatus: HealthStatus \{enum\}} \\
-    \texttt{avgTemperature: Float} \\
-    \texttt{totalRainfall: Float} \\
-    \texttt{waterStressRisk: Boolean} \\
-    \texttt{diseaseRisk: Boolean} \\
-    \texttt{rawData: String (JSON)} \\
-    \texttt{recommendations: String} \\
+    \texttt{id: String (CUID)} \\[2pt]
+    \texttt{fieldId: String (FK)} \\[2pt]
+    \texttt{meanNDVI: Float} \\[2pt]
+    \texttt{ndviTrend: NDVITrend \{enum\}} \\[2pt]
+    \texttt{healthStatus: HealthStatus \{enum\}} \\[2pt]
+    \texttt{avgTemperature: Float} \\[2pt]
+    \texttt{totalRainfall: Float} \\[2pt]
+    \texttt{waterStressRisk: Boolean} \\[2pt]
+    \texttt{diseaseRisk: Boolean} \\[2pt]
+    \texttt{rawData: String (JSON)} \\[2pt]
+    \texttt{recommendations: String} \\[2pt]
     \texttt{createdAt: DateTime}
     \nodepart{three}
-    \texttt{+getRecommendations()} \\
-    \texttt{+getHeatmapData()} \\
+    \texttt{+getRecommendations()} \\[2pt]
+    \texttt{+getHeatmapData()} \\[2pt]
     \texttt{+getTrendSeries()}
   };
 
-  % Relationships
-  \draw[compo] (user.east) -- node[above,font=\scriptsize]{1} node[below,font=\scriptsize]{has many} (field.west);
-  \draw[compo] (field.south) -- node[right,font=\scriptsize]{has many} node[left,font=\scriptsize]{1} (analysis.north);
-\end{tikzpicture}
+  %% ---- Relationships ----
+  % User 1 --< Field
+  \draw[->,link] (user.east) -- node[lbl,above]{1}
+                                node[lbl,below]{has many}
+                                (field.west);
+
+  % Field 1 --< Analysis (vertical)
+  \draw[->,link] (field.south) -- node[lbl,right,pos=0.3]{1}
+                                  node[lbl,right,pos=0.7]{has many}
+                                  (analysis.north);
+\end{tikzpicture}%
+}
 \end{figure}
 
 \subsection{UML Sequence Diagram}
