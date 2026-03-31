@@ -1,7 +1,7 @@
 # Fdb version 4
-["pdflatex"] 1774977274.18878 "/home/worshix/school-projects/tobacco-assessment/document/document.tex" "document.pdf" "document" 1774977277.20221 0
+["pdflatex"] 1774977840.03698 "/home/worshix/school-projects/tobacco-assessment/document/document.tex" "document.pdf" "document" 1774977842.8747 0
   "/etc/texmf/web2c/texmf.cnf" 1763803635.1071 475 c0e671620eb5563b2130f56340a5fde8 ""
-  "/home/worshix/school-projects/tobacco-assessment/document/document.tex" 1774977170.90989 105361 e4bf44590f68b481a7a443b41054f3c1 ""
+  "/home/worshix/school-projects/tobacco-assessment/document/document.tex" 1774977812.52753 105385 32afe17bfb0f846ebf54c510c29aad18 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/adobe/times/ptmb7t.tfm" 1136768653 2172 fd0c924230362ff848a33632ed45dc23 ""
@@ -213,12 +213,12 @@
   "/usr/share/texmf/web2c/texmf.cnf" 1707919699 40399 f2c302f7d2af602abb742093540a5834 ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1763803678.85973 5472669 54eaf61a88b6b7896ebd0dac973cb29c ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1763803791 8213357 d33d41fe8cf9e9ce27b2ac87fd9af8ca ""
-  "document.aux" 1774977277.04781 15282 d3da01b4ab77a72af3053b4e1c42a756 "pdflatex"
-  "document.lof" 1774977277.04981 1160 acf178bcef5d349625fdf61d1b8527d5 "pdflatex"
-  "document.lot" 1774977277.04981 291 452d24cb4932cac9b518b5fe5c314d38 "pdflatex"
-  "document.out" 1774977277.04981 10127 b04f60c4ccc9ba866e7a48aae074dc36 "pdflatex"
-  "document.tex" 1774977170.90989 105361 e4bf44590f68b481a7a443b41054f3c1 ""
-  "document.toc" 1774977277.04981 5495 768af3b4361dc07b424f2baa08bb9a7d "pdflatex"
+  "document.aux" 1774977842.73832 15282 8a9a5b20703abca8af0d37746085d2fd "pdflatex"
+  "document.lof" 1774977842.74132 1160 6be2f0cc1ad5d930e38159ab7684afda "pdflatex"
+  "document.lot" 1774977842.74132 291 452d24cb4932cac9b518b5fe5c314d38 "pdflatex"
+  "document.out" 1774977842.74032 10127 b04f60c4ccc9ba866e7a48aae074dc36 "pdflatex"
+  "document.tex" 1774977812.52753 105385 32afe17bfb0f846ebf54c510c29aad18 ""
+  "document.toc" 1774977842.74132 5495 768af3b4361dc07b424f2baa08bb9a7d "pdflatex"
   "hit_logo.png" 1774975030.29023 180107 f266d0e74803c9abc63dea4bf979ed1c ""
   (generated)
   "document.aux"

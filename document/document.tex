@@ -1006,6 +1006,7 @@ Figure~\ref{fig:usecase} presents the Use Case Diagram illustrating actor intera
 \centering
 \caption{Use Case Diagram — Satellite Crop Health Monitoring System}
 \label{fig:usecase}
+\resizebox{\linewidth}{!}{%
 \begin{tikzpicture}[
   actor/.style={minimum width=1.2cm, minimum height=2cm, align=center, font=\small\bfseries},
   uc/.style={draw=hitblue,ellipse,fill=hitblue!10,minimum width=3.4cm, minimum height=0.9cm,
@@ -1044,7 +1045,8 @@ Figure~\ref{fig:usecase} presents the Use Case Diagram illustrating actor intera
   \foreach \uc in {manageusers,config,logs}
     \draw[arr] (admin.west) -- (\uc.east);
   \draw[arr] (admin.west) to[out=180,in=0,looseness=0.5] (login.east);
-\end{tikzpicture}
+\end{tikzpicture}%
+}
 \end{figure}
 
 \subsection{Non-Functional Requirements}
