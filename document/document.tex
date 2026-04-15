@@ -149,7 +149,7 @@
 \addcontentsline{toc}{chapter}{Declaration}
 \markboth{DECLARATION}{}
 
-I, Prince Rupiya (H220536M), hereby declare that this project report is my own original work and has not been submitted, in whole or in part, for any other degree or qualification at Harare Institute of Technology or any other institution. Where the work of others has been used, it has been fully referenced and acknowledged in accordance with the Harvard referencing system.
+I, Prince Rupiya (H220536M), declare that this project report is my own original work. It has not been submitted, in whole or in part, for any other degree or qualification at Harare Institute of Technology or elsewhere. Where I have drawn on the work of others, I have referenced and acknowledged it fully in accordance with the Harvard referencing system.
 
 \vspace{2cm}
 \noindent\textbf{Student Signature:} \hrulefill \hspace{3cm} \textbf{Date:} \hrulefill
@@ -186,28 +186,28 @@ serve the hands that feed our nation.}
 \addcontentsline{toc}{chapter}{Acknowledgements}
 \markboth{ACKNOWLEDGEMENTS}{}
 
-I would like to express my sincere gratitude to Mr P. Manyonganise, my supervisor, whose expert guidance, patience, and constructive feedback shaped every aspect of this project. His deep knowledge of information systems and agricultural technology proved invaluable throughout the research and development process.
+My deepest thanks go to Mr P. Manyonganise, my supervisor, for his guidance, patience, and consistently sharp feedback. His knowledge of both information systems and agricultural technology shaped this project in ways I couldn't have managed alone.
 
-I am grateful to the Department of Information Technology at the Harare Institute of Technology for providing the academic foundation, resources, and environment that made this research possible.
+I'm grateful to the Department of Information Technology at the Harare Institute of Technology for the academic foundation and the resources that made this research possible.
 
-I extend my appreciation to the open-source community behind Next.js, React-Leaflet, scikit-learn, Google Earth Engine, and the Open-Meteo project, whose freely available tools underpinned the technical implementation of this system.
+This work would not exist without the open-source tools it depends on — Next.js, React-Leaflet, scikit-learn, Google Earth Engine, and the Open-Meteo project. I owe a quiet debt to every developer who contributed to those projects.
 
-I also thank my colleagues and fellow students who participated in system testing, provided feedback, and offered moral support throughout this endeavour.
+To my colleagues and fellow students who sat through testing sessions, offered feedback, and kept my spirits up: thank you.
 
-Finally, I am deeply grateful to my family for their patience, encouragement, and sacrifices that sustained me through the demands of this programme.
+And to my family — your patience and sacrifice through this whole programme meant more than I can properly say.
 
 % ---- Abstract ----
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
 \markboth{ABSTRACT}{}
 
-Tobacco farming is a cornerstone of Zimbabwe's agricultural export economy, yet smallholder farmers continue to rely on manual, reactive monitoring methods that detect crop stress only after significant damage has occurred. This project presents the design and implementation of a satellite-based tobacco crop health monitoring system that integrates live Sentinel-2 multispectral imagery retrieved through the Google Earth Engine platform with machine learning and temporal trend analysis to deliver actionable, evidence-based insights to farmers through a web-based interface.
+Tobacco is Zimbabwe's most valuable cash crop, yet the smallholder farmers who grow it still rely on manual inspection — walking the field, looking for visible symptoms, and hoping problems haven't already gone too far. By the time stress shows up as wilting or discolouration, yield loss is usually already happening. This project addresses that gap directly. It presents a satellite-based tobacco crop health monitoring system that pulls live Sentinel-2 multispectral imagery through Google Earth Engine, applies machine learning and temporal trend analysis, and delivers plain-language health assessments to farmers through an ordinary web browser.
 
-The system employs a logistic regression classifier trained on ground-truth satellite and weather observations to categorise crop health into three states: \emph{Healthy}, \emph{Moderate Stress}, and \emph{High Stress}, achieving 97\% classification accuracy. Feature engineering extracts five predictors from real satellite data: mean NDVI, NDVI trend slope, within-field NDVI variance, average temperature, and cumulative rainfall over a 14-to-30-day analysis window. Temporal trend analysis enables early detection of declining vegetation health before crops reach critical stress states, while within-field spatial variability analysis produces a heatmap overlay that identifies stress hotspots within user-drawn field polygons.
+At the core is a logistic regression classifier trained on satellite and weather observations. It sorts tobacco field health into three categories — \emph{Healthy}, \emph{Moderate Stress}, and \emph{High Stress} — with 97\% accuracy on held-out test data. Five features drive the model: mean NDVI, the trend slope of NDVI over time, within-field NDVI variance, average temperature, and cumulative rainfall across a 14-to-30-day window. The temporal trend component is particularly important: declining NDVI trajectories can be flagged days before visible symptoms emerge, giving farmers a real window to intervene. A within-field heatmap adds spatial detail, highlighting which parts of a field are under most stress.
 
-The web application is built on Next.js 14 with TypeScript, using React-Leaflet for interactive mapping and Prisma with PostgreSQL as the database backend. An explainable rule-based recommendation engine translates technical satellite data into plain-language farming advice covering irrigation scheduling, disease monitoring, and field inspection priorities.
+The application runs on Next.js~14 with TypeScript. React-Leaflet handles the interactive map, and Prisma with PostgreSQL manages persistent storage. A rule-based recommendation engine sits on top of the classifier, converting raw analysis outputs into specific, readable advice on irrigation, disease risk, and field inspection.
 
-The system contributes a cost-effective precision agriculture solution designed specifically for smallholder tobacco farmers in Zimbabwe, leveraging exclusively free and open data sources to eliminate subscription barriers. By combining live satellite imagery, machine learning inference, and transparent recommendation logic within a single accessible web platform, the system demonstrates that high-quality crop health monitoring can be achieved without expensive commercial infrastructure.
+Everything in this system — the satellite imagery, the weather data, the hosting platform — is free and open. There are no subscription fees. That was a deliberate design constraint, because the commercial precision agriculture tools that could theoretically serve Zimbabwean smallholder farmers are priced well beyond what those farmers can afford. This project shows that high-quality crop health monitoring doesn't require expensive infrastructure. It requires thoughtful engineering.
 
 \vspace{0.5cm}
 \noindent\textbf{Keywords:} crop health monitoring, machine learning, NDVI, precision agriculture,
@@ -269,131 +269,131 @@ USD & United States Dollar \\
 
 \section{Introduction}
 
-Agriculture remains the backbone of Zimbabwe's economy, accounting for approximately 12--15\% of gross domestic product and employing an estimated 60--70\% of the rural workforce \citep{moa2022}. Within this sector, tobacco stands as the country's most valuable cash crop. Zimbabwe is one of the world's largest tobacco producers, with the Tobacco Industry and Marketing Board recording auction sales exceeding 184 million kilogrammes in the 2022/2023 season, generating over USD 600 million in export revenue \citep{timb2023}. For smallholder farmers on communal and resettlement lands, tobacco cultivation provides a primary source of income, making the health of the crop a matter of direct economic survival.
+Agriculture is the backbone of Zimbabwe's economy. It accounts for roughly 12--15\% of GDP and keeps an estimated 60--70\% of the rural workforce employed \citep{moa2022}. Within that sector, tobacco is the crown jewel — the country's most valuable cash crop and one of the largest tobacco outputs anywhere in the world. The Tobacco Industry and Marketing Board recorded auction sales exceeding 184 million kilogrammes in the 2022/2023 season alone, generating over USD~600 million in export revenue \citep{timb2023}. For smallholder farmers on communal and resettlement lands, a good tobacco season is the difference between financial stability and debt.
 
-Despite tobacco's strategic importance, the majority of smallholder farmers in Zimbabwe continue to rely on traditional monitoring methods rooted in manual observation and experience-based judgement \citep{nyoka2020}. Field inspections are time-consuming, subjective, and logistically constrained by terrain, distance, and seasonal weather. More critically, such methods detect crop stress—whether from water deficit, pest infestation, or nutrient deficiency—only after visible symptoms have appeared, by which point significant physiological damage has already occurred. The economic losses that follow are substantial: reduced leaf quality directly translates to lower grading at the auction floor and diminished farmer income \citep{rwizi2021}.
+Yet despite that strategic importance, most of those farmers are still monitoring their crops the same way they always have: walking the field, looking for symptoms, and relying on experience to guide decisions \citep{nyoka2020}. It's a method that works — until it doesn't. Manual inspection is slow, subjective, and limited by how much of the field a person can realistically cover. The deeper problem is that it only catches stress after damage has already become visible. By the time wilting or discolouration shows up, the plant has already been under physiological stress for days. That translates directly to leaf quality loss, lower auction grades, and less money in the farmer's pocket \citep{rwizi2021}.
 
-The advent of satellite remote sensing technology, machine learning, and open data infrastructure presents a transformative opportunity for Zimbabwean smallholder tobacco farming. The Normalized Difference Vegetation Index (NDVI), computed from multispectral satellite imagery, has been established as a reliable indicator of vegetation health for over four decades \citep{rouse1974}. Derived from the ratio of near-infrared to visible red reflectance, NDVI captures the physiological status of plant canopies with a sensitivity that predates visual symptom expression by several days. When integrated with weather data and machine learning classifiers, NDVI time-series can support early-warning systems that enable timely, targeted agricultural interventions.
+Satellite remote sensing changes that equation. The Normalized Difference Vegetation Index (NDVI), derived from multispectral imagery, has been used to track vegetation health for over four decades \citep{rouse1974}. It's computed from the ratio of near-infrared to red reflectance and is sensitive to changes in plant physiology that occur well before any visible symptoms appear — often by several days. Paired with weather data and a machine learning classifier, NDVI time-series become an early-warning system rather than just a record.
 
-This project proposes and implements a Satellite-Based Tobacco Crop Health Monitoring System that combines live Sentinel-2 multispectral imagery retrieved through the Google Earth Engine platform with logistic regression machine learning and temporal trend analysis, delivered through an accessible web-based interface. Farmers can define field boundaries through a polygon-drawing tool, trigger automated satellite analysis, and receive specific, explainable recommendations regarding irrigation, disease monitoring, and crop management. The system is designed exclusively around free and open data sources, eliminating the subscription barriers that have historically excluded smallholder farmers from precision agriculture tools.
+This project builds exactly that. It implements a Satellite-Based Tobacco Crop Health Monitoring System that pulls live Sentinel-2 multispectral imagery through Google Earth Engine, runs it through a logistic regression classifier and temporal trend analysis, and presents the results through a web interface any farmer can use on a smartphone. Draw a field boundary on a map, trigger the analysis, and get specific recommendations on irrigation, disease monitoring, and crop management — all driven by actual satellite data and at zero cost.
 
-This document covers Chapters 1 through 4 of the project report. Chapter 1 establishes the research context, motivation, problem statement, and objectives. Chapter 2 reviews related work, comparing existing precision agriculture platforms against the requirements identified for this system. Chapter 3 presents the requirements analysis, including feasibility assessment and work plan. Chapter 4 provides the system analysis, encompassing the existing system evaluation, the proposed solution, and formal system models.
+The chapters that follow build out the full picture. Chapter~1 establishes the context, motivation, and objectives. Chapter~2 surveys the existing landscape of precision agriculture platforms and the academic foundations this project draws on. Chapter~3 covers requirements and feasibility. Chapter~4 presents the full system analysis, from existing-system critique through to formal UML models.
 
 \section{Motivation}
 
-The motivation for this project derives from two converging realities observed in Zimbabwe's tobacco farming sector.
+Two realities collide here, and together they make this project worth doing.
 
-The first is economic. Tobacco contributes disproportionately to Zimbabwe's foreign currency earnings relative to other agricultural crops \citep{timb2023}. Yet yield variability among smallholder farmers remains high, driven in large part by late or missed detection of crop stress events. The Ministry of Lands, Agriculture, Fisheries, Water and Rural Development has identified precision farming as a strategic priority in the Zimbabwe Agricultural Development Strategy II 2021--2025, recognising that technology-enabled monitoring can significantly improve resource efficiency and yield stability \citep{moa2022}.
+The first is economic. Tobacco is Zimbabwe's single biggest foreign currency earner in agriculture \citep{timb2023}, yet yield variability among smallholder growers remains stubbornly high. A significant part of that variability comes down to late detection — stress events that could have been caught early instead go unnoticed until they've already cost the farmer money. The Ministry of Lands, Agriculture, Fisheries, Water and Rural Development has recognised this, naming precision farming as a strategic priority in the Zimbabwe Agricultural Development Strategy~II 2021--2025 \citep{moa2022}.
 
-The second reality is technological. Satellite remote sensing data that once required specialised hardware and expensive processing infrastructure is now freely accessible through platforms such as Google Earth Engine \citep{gorelick2017}. The European Space Agency's Sentinel-2 satellites provide multispectral imagery at 10-metre spatial resolution on a 5-to-10-day revisit cycle, covering Zimbabwe with sufficient frequency to detect rapidly evolving crop stress events \citep{esa2023}. These data are publicly available at no cost, yet their utilisation by Zimbabwean farmers remains negligible due to the technical complexity of existing interfaces.
+The second reality is technological. Satellite data that used to require expensive hardware and specialised processing infrastructure is now freely available through Google Earth Engine \citep{gorelick2017}. ESA's Sentinel-2 satellites cover Zimbabwe every 5--10 days at 10-metre resolution \citep{esa2023} — more than enough to catch a developing stress event. The data exists and it's free. What's missing is an interface that makes it usable by a farmer without a remote sensing background.
 
-This project is motivated by the opportunity to bridge that gap: to translate freely available satellite data into accessible, actionable insights that smallholder tobacco farmers can use without specialised training or expensive equipment. A system that can detect declining NDVI trends in the 14 days before visible stress symptoms emerge gives farmers a meaningful window for intervention—one that the current manual inspection regime cannot provide.
+That's the gap this project fills. Translating freely available satellite data into actionable farm-level insights — without requiring specialist training or expensive equipment — is both technically feasible and genuinely needed. Detecting a declining NDVI trend 14 days before symptoms appear gives farmers a window to intervene. Manual inspection can't do that.
 
 \section{Problem Statement}
 
-Current tobacco crop monitoring practices in Zimbabwe are characterised by significant limitations that undermine productivity and farmer income:
+The problems with current monitoring practice fall into six distinct categories:
 
 \begin{enumerate}
-  \item \textbf{Reactive detection:} Crop stress events—including water deficit, pest infestation, and nutrient deficiency—are identified only after visible physical symptoms have developed, by which point yield loss is already inevitable \citep{nyoka2020}.
+  \item \textbf{Reactive detection:} Stress — from water deficit, pest infestation, or nutrient deficiency — only gets noticed once symptoms are visible. At that point, yield loss is already locked in \citep{nyoka2020}.
 
-  \item \textbf{Temporal gaps:} Manual field inspections are episodic and infrequent, typically conducted weekly or fortnightly. Between inspections, stress conditions may develop, intensify, and cause irreversible damage without detection.
+  \item \textbf{Temporal gaps:} Inspections happen weekly or fortnightly at best. A stress event that starts on day~3 and intensifies by day~10 can cause irreversible damage before anyone notices.
 
-  \item \textbf{Spatial gaps:} Even when field visits occur, inspectors sample only parts of a field. Localised stress zones—a waterlogged corner, a section with compacted soil, or a pest entry point—are easily missed.
+  \item \textbf{Spatial gaps:} Even a thorough field visit covers only a fraction of the actual field area. A waterlogged corner, a patch of compacted soil, or a pest entry point at the far edge of a field can go entirely undetected.
 
-  \item \textbf{No integration of environmental data:} Monitoring decisions are rarely informed by systematic weather data. Rainfall, temperature, and drought indices that are highly predictive of stress events are not routinely incorporated into monitoring protocols.
+  \item \textbf{No environmental context:} Monitoring decisions are made without looking at weather data. Rainfall totals, temperature anomalies, and drought indices that strongly predict stress events simply aren't factored in.
 
-  \item \textbf{Cost barriers to existing technology:} Commercial precision agriculture platforms that provide satellite-based crop monitoring charge subscription fees ranging from hundreds to thousands of USD per year, placing them far beyond the reach of smallholder farmers in Zimbabwe \citep{wolfert2017}.
+  \item \textbf{Cost barriers:} Commercial satellite monitoring platforms charge hundreds to thousands of USD per year \citep{wolfert2017}. That pricing puts them out of reach for smallholder farmers whose entire annual income from a season may be comparable.
 
-  \item \textbf{Lack of localised solutions:} Few existing systems are calibrated for Zimbabwean growing conditions, tobacco-specific NDVI thresholds, or the realities of smallholder farming in Southern Africa \citep{rwizi2021}.
+  \item \textbf{No local calibration:} Very few systems have been adapted for Zimbabwean growing conditions, tobacco-specific NDVI thresholds, or the practical realities of smallholder farming in Southern Africa \citep{rwizi2021}.
 \end{enumerate}
 
-There is therefore an urgent need for an integrated, accessible, and cost-effective system that uses satellite data and machine learning to monitor tobacco crop health in near-real time, detecting stress conditions before they manifest as visible damage and translating technical data into actionable farming decisions.
+Taken together, these gaps make the case for a system that monitors tobacco crop health continuously from satellite data, flags stress conditions before they become visible, and communicates findings in terms farmers can act on.
 
 \section{Related Work}
 
-Several platforms and research projects have explored the use of satellite data and precision agriculture technology, providing a foundation from which this system draws and against which it must be differentiated.
+A number of platforms and research tools are relevant here, both as prior art and as context for what's still missing.
 
 \subsection{Climate FieldView}
 
-Climate FieldView, developed by The Climate Corporation—a subsidiary of Bayer AG—is one of the most widely deployed commercial precision agriculture platforms globally \citep{climcorp2023}. It provides satellite imagery, field-level analysis, yield mapping, and integration with farm machinery data. However, its commercial subscription model and design orientation towards large-scale North American farming operations make it inaccessible and contextually inappropriate for smallholder tobacco farmers in Zimbabwe. Its NDVI thresholds and recommendation logic are calibrated for maize, soybean, and other temperate grain crops rather than tropical cash crops such as tobacco.
+Climate FieldView — developed by The Climate Corporation, a Bayer AG subsidiary — is among the most widely deployed commercial precision agriculture platforms in the world \citep{climcorp2023}. It covers satellite field imagery, NDVI monitoring, yield mapping, and farm machinery integration. The technical capability is not in question. But FieldView is built for large-scale North American grain operations, its NDVI thresholds and recommendation logic are calibrated for maize and soybean, and its subscription costs make it economically inaccessible for Zimbabwean smallholders. None of that is fixable with configuration.
 
 \subsection{CropIn Technology}
 
-CropIn Technology, based in India, offers a digital agriculture platform that has been deployed in parts of sub-Saharan Africa through NGO and government partnership programmes \citep{cropin2023}. The platform covers crop management, weather monitoring, and field analytics. While it demonstrates the feasibility of deploying digital agriculture tools in developing regions, CropIn's dependency on paid subscription tiers and its generic crop model—without tobacco-specific customisation—limit its applicability to Zimbabwe's smallholder sector. Furthermore, the system has not been validated against Zimbabwean field conditions or tobacco-specific NDVI behaviour.
+CropIn, an Indian agri-tech firm, has deployed digital farming tools in parts of sub-Saharan Africa through NGO and government partnerships \citep{cropin2023}. Its coverage of crop management, weather monitoring, and field analytics shows that digital agriculture can work in developing-region contexts. What CropIn doesn't offer is tobacco-specific calibration, validated performance against Zimbabwean field conditions, or access without paid subscription tiers. It's a useful proof-of-concept for the approach, not a ready solution.
 
 \subsection{Taranis}
 
-Taranis is an aerial intelligence platform that uses high-resolution drone and satellite imagery to detect crop diseases, pests, and nutrient deficiencies at a leaf level of precision \citep{taranis2023}. While technically sophisticated—achieving detection capabilities not possible with standard satellite imagery—Taranis is designed for large commercial farming operations and relies on drone hardware and per-hectare pricing that is economically prohibitive for smallholder farmers. Its strength lies in disease detection at a resolution this project does not attempt; its weakness is accessibility.
+Taranis uses high-resolution drone and satellite imagery to detect crop disease and pest damage at near-leaf-level precision \citep{taranis2023}. The technical depth is impressive — it detects things standard satellite imagery can't. But it's designed for large commercial farms, requires drone hardware on the ground, and prices per hectare in a way that simply doesn't work for smallholder contexts. Taranis is a good example of a technically strong tool with the wrong access model.
 
 \subsection{Google Earth Engine and Open Research Tools}
 
-The Google Earth Engine platform itself, along with open-source tools such as the Open Data Cube and Sen2Agri, provides freely accessible satellite data processing infrastructure that underpins an emerging body of agricultural remote sensing research \citep{gorelick2017}. Rwizi, Sibanda and Chimonyo \citep*{rwizi2021} demonstrate the application of GEE-based NDVI monitoring in Zimbabwean agricultural contexts, confirming the technical viability of the approach. However, these tools remain largely within the research domain, requiring programming expertise to use and offering no user-facing interface accessible to farmers.
+GEE itself, along with tools like the Open Data Cube and Sen2Agri, provides the kind of free satellite processing infrastructure that serious agricultural remote sensing research runs on \citep{gorelick2017}. Rwizi, Sibanda and Chimonyo \citep*{rwizi2021} have demonstrated GEE-based NDVI monitoring working in Zimbabwean agricultural contexts, confirming that the technical approach is viable locally. The limitation is that these tools live in the research domain — they require programming knowledge and offer no farmer-facing interface.
 
 \section{Hypothesis}
 
-If Zimbabwean smallholder tobacco farmers are provided with a web-based system that combines live Sentinel-2 satellite NDVI data retrieved via Google Earth Engine with machine learning classification and temporal trend analysis, then they can receive early detection of crop stress conditions—specifically 7 to 14 days before visible symptoms develop—enabling timely interventions that reduce crop losses, improve resource allocation, and ultimately increase yield and income.
+Given a web-based system that combines live Sentinel-2 NDVI data retrieved via Google Earth Engine with machine learning classification and temporal trend analysis, Zimbabwean smallholder tobacco farmers will be able to detect crop stress conditions 7 to 14 days before symptoms become visible. That early warning window, if acted upon, should reduce crop losses, improve how inputs are allocated, and increase both yield and income.
 
 \section{Technical Objectives}
 
-The main objective of this project is to design and implement a Satellite-Based Tobacco Crop Health Monitoring System that is accessible, accurate, and deployable by smallholder farmers in Zimbabwe. The specific objectives are:
+The overarching aim is to design and implement a Satellite-Based Tobacco Crop Health Monitoring System that smallholder farmers in Zimbabwe can actually use — accessible, accurate, and deployable without specialist infrastructure. The specific objectives are:
 
 \begin{enumerate}
-  \item To design and implement a web-based platform that enables farmers to define field boundaries through interactive polygon drawing and trigger satellite-based crop health analysis on demand.
+  \item Build a web platform that lets farmers draw field polygons on an interactive map and trigger a satellite-based crop health analysis on demand.
 
-  \item To integrate live Sentinel-2 Level-2A multispectral imagery through the Google Earth Engine API to compute real NDVI values for user-defined field polygons, replacing estimated data with actual satellite measurements.
+  \item Pull live Sentinel-2 Level-2A imagery through the Google Earth Engine API to compute real NDVI values for each user-defined polygon, replacing estimated figures with actual satellite measurements.
 
-  \item To develop and train a logistic regression machine learning classifier on ground-truth satellite and weather observations to classify tobacco crop health into three categories: \emph{Healthy}, \emph{Moderate Stress}, and \emph{High Stress}.
+  \item Train a logistic regression classifier on ground-truth satellite and weather observations to categorise tobacco field health as \emph{Healthy}, \emph{Moderate Stress}, or \emph{High Stress}.
 
-  \item To implement temporal NDVI trend analysis over a 14-to-30-day observation window using linear regression, enabling early detection of declining vegetation health trajectories before crops reach critical stress states.
+  \item Implement temporal NDVI trend analysis across a 14-to-30-day window, so that declining vegetation trajectories can be flagged before fields reach a critical stress state.
 
-  \item To provide within-field spatial variability analysis using per-pixel Sentinel-2 NDVI distributions, generating a heatmap overlay that identifies and localises stress hotspots within drawn field polygons.
+  \item Compute within-field spatial variability from per-pixel NDVI distributions and render it as a heatmap overlay, enabling farmers to pinpoint exactly where stress is concentrated.
 
-  \item To design an explainable rule-based recommendation system that translates technical satellite data and model predictions into plain-language farming advice covering irrigation, disease monitoring, and field inspection.
+  \item Build a rule-based recommendation engine that converts the classifier output and raw feature values into plain-language advice on irrigation, disease monitoring, and field inspection.
 
-  \item To deploy the system using a scalable architecture that separates Python-based machine learning model training from JavaScript-based inference, enabling serverless deployment without requiring Python runtime infrastructure.
+  \item Architect the system so Python handles model training offline and JavaScript handles inference at runtime — making the whole thing deployable serverlessly, without a Python backend.
 \end{enumerate}
 
 \section{Expected Results}
 
-The successful implementation of this system is expected to yield the following outcomes:
+The expected outcomes of a successful implementation are:
 
 \begin{itemize}
-  \item A fully functional web application accessible via standard web browsers, requiring no software installation, enabling Zimbabwean tobacco farmers to monitor crop health using live satellite data.
+  \item A working web application — no installation required — that gives Zimbabwean tobacco farmers access to live satellite-based crop health monitoring from any browser.
 
-  \item A logistic regression crop health classifier achieving accuracy exceeding 90\% on held-out ground-truth test data, with balanced precision and recall across all three health categories.
+  \item A logistic regression classifier clearing 90\% accuracy on held-out test data, with balanced precision and recall across all three health classes.
 
-  \item Temporal trend detection capability that identifies declining NDVI trajectories within a 14-to-30-day analysis window, issuing early-warning alerts before crops reach the High Stress threshold.
+  \item Trend detection that catches declining NDVI trajectories within a 14-to-30-day window, before fields cross into the High Stress category.
 
-  \item Within-field heatmap visualisation that highlights specific areas of localised stress within farmer-defined field polygons, enabling targeted rather than uniform interventions.
+  \item A within-field heatmap showing exactly where stress is concentrated inside a drawn polygon, so interventions can be targeted rather than applied uniformly.
 
-  \item A recommendation engine that provides specific, evidence-linked advice for irrigation scheduling, disease risk monitoring, and agronomist inspection, with each recommendation accompanied by the data observations that triggered it.
+  \item A recommendation engine that links each piece of advice — whether on irrigation, disease risk, or calling in an agronomist — to the specific data reading that triggered it.
 
-  \item A zero-cost data architecture that relies exclusively on the Google Earth Engine free research tier and the Open-Meteo open weather API, eliminating recurring subscription costs for deployment and operation.
+  \item A zero-cost data architecture built entirely on GEE's free research tier and the Open-Meteo API, with no recurring subscription fees.
 
-  \item Improved farmer decision-making capability, with the expectation that early stress detection will reduce crop losses from water stress and disease by enabling interventions within the effective treatment window.
+  \item Better-informed farm decisions, with the reasonable expectation that catching stress 7--14 days early translates into fewer crop losses and better use of inputs.
 \end{itemize}
 
 \section{Ethics Considerations}
 
 \begin{itemize}
-  \item \textbf{Data Privacy and Consent:} The system collects farmer names, email addresses, and geographic field location data. All personal data is stored in a PostgreSQL database secured with role-based access controls and encrypted passwords using bcrypt hashing. Farmers retain full ownership of their field data, and no data is shared with third parties without explicit consent. The system complies with data protection principles outlined in Zimbabwe's Cybersecurity and Data Protection Act (2021).
+  \item \textbf{Data Privacy and Consent:} The system collects names, email addresses, and field location data. All of it is stored in a PostgreSQL database protected by role-based access controls and bcrypt-hashed passwords. Farmers own their field data; nothing is shared with third parties without explicit consent. The system operates in accordance with Zimbabwe's Cybersecurity and Data Protection Act (2021).
 
-  \item \textbf{Data Accuracy and Transparency:} NDVI values are derived from real Sentinel-2 multispectral imagery and are accompanied by the observation date, cloud cover status, and analysis window parameters, allowing users to assess data quality. The system explicitly communicates uncertainty where cloud cover reduces the number of usable satellite observations. Each recommendation is linked to the specific data observation that triggered it, ensuring farmers can evaluate and, if necessary, override system advice.
+  \item \textbf{Data Accuracy and Transparency:} Every analysis result comes with its observation date, cloud cover status, and analysis window parameters so users can judge data quality themselves. Where cloud cover has reduced the number of usable satellite scenes, the system says so explicitly. Each recommendation is tied back to the data reading that produced it, so farmers can evaluate the advice rather than just accept it.
 
-  \item \textbf{Algorithmic Fairness:} The machine learning model is trained on ground-truth data that reflects the natural variation in Zimbabwean tobacco field conditions. Model performance is evaluated separately across all three health categories to detect and mitigate class-specific bias. Thresholds are reviewed against agronomic literature to ensure they reflect biologically meaningful boundaries rather than artefacts of the training data.
+  \item \textbf{Algorithmic Fairness:} The model is trained on data that reflects real variation in Zimbabwean tobacco field conditions. Performance is evaluated class by class — not just overall accuracy — to catch any category-specific bias early. The NDVI thresholds are cross-checked against agronomic literature to confirm they correspond to genuine physiological boundaries, not just statistical artefacts.
 
-  \item \textbf{Accessibility and Inclusivity:} The web interface is designed for use with basic internet connectivity and entry-level smartphones. Text is presented in plain English at a reading level appropriate for users with secondary school education. The system does not assume technical literacy beyond the ability to navigate a standard website.
+  \item \textbf{Accessibility and Inclusivity:} The interface is built for basic internet connectivity and entry-level smartphones. Text is written in plain English, pitched at secondary school reading level. No technical literacy is assumed beyond the ability to navigate a standard website.
 
-  \item \textbf{Environmental Responsibility:} The system promotes precision application of irrigation water and agrochemicals, directly supporting reduced resource waste and environmental impact. By enabling targeted interventions in specific stress zones rather than uniform field-wide treatment, the system actively encourages sustainable farming practices.
+  \item \textbf{Environmental Responsibility:} By enabling targeted irrigation and agrochemical application to specific stressed zones rather than blanket treatment of the whole field, the system actively reduces water and chemical waste.
 
-  \item \textbf{Satellite Data Use:} All satellite imagery is accessed through the Google Earth Engine platform under its terms of service for research and non-commercial use. Sentinel-2 imagery is provided freely by the European Space Agency under the Copernicus Open Access Data Policy and carries no use restrictions.
+  \item \textbf{Satellite Data Use:} All imagery is accessed through GEE under its terms of service for research and non-commercial use. Sentinel-2 data is released freely by ESA under the Copernicus Open Access Data Policy with no use restrictions.
 \end{itemize}
 
 \section{Conclusion}
 
-This chapter has established the context, motivation, and objectives of the Satellite-Based Tobacco Crop Health Monitoring System. The challenges facing Zimbabwean smallholder tobacco farmers—reactive detection, temporal and spatial monitoring gaps, and cost barriers to existing technology—are well-documented and directly addressable through the combination of freely available Sentinel-2 satellite imagery, machine learning classification, and a user-centred web interface.
+The challenges are real and well-documented: Zimbabwean smallholder tobacco farmers detect stress too late, inspect too little of their fields, work without environmental data, and face subscription costs that make commercial solutions irrelevant to them. None of those problems are unsolvable. Freely available Sentinel-2 satellite imagery, machine learning classification, and a sensibly designed web interface are sufficient to address all of them.
 
-The system proposed here is not merely a research prototype. It is designed for real deployment, using free and open data sources, a scalable technology stack, and an explainable recommendation engine that respects the knowledge and agency of the farmers it serves. The chapters that follow build from this foundation: reviewing the existing landscape of precision agriculture systems, defining the requirements that must be met, and presenting the system analysis that will guide implementation.
+What follows from here is the substance: a literature review that grounds the approach in what's already been tried; a requirements analysis that connects the system design to actual farmer needs; and a system analysis that works through the architecture in formal detail.
 
 % ============================================================
 \chapter{Literature Review}
@@ -401,65 +401,61 @@ The system proposed here is not merely a research prototype. It is designed for 
 
 \section{Introduction}
 
-Precision agriculture platforms have evolved substantially since the early NDVI-based vegetation monitoring systems of the 1970s. What began as research-grade tools requiring specialised remote sensing expertise have matured into integrated platforms combining satellite imagery, weather data, field sensors, and machine learning within commercially deployed systems \citep{wolfert2017}. For this project to situate its contribution clearly, it is necessary to evaluate the current landscape of relevant systems against the specific requirements of smallholder tobacco farming in Zimbabwe.
+Precision agriculture has come a long way since the early NDVI monitoring work of the 1970s. What started as research-grade tools that only remote sensing specialists could use has grown into a mature industry: integrated platforms that combine satellite imagery, field sensors, weather data, and machine learning in commercially deployed products \citep{wolfert2017}. The question for this project isn't whether the technology works — it does — but whether any of it works for smallholder tobacco farmers in Zimbabwe.
 
-This chapter reviews five platforms and systems that represent the contemporary state of satellite-based and digital precision agriculture: FarmLogs, SatAgro, Farmerline, Digital Green, and Regrow Ag. Each is assessed for its technical capabilities, accessibility, and suitability for the Zimbabwean smallholder tobacco context. The chapter concludes by identifying the systemic gaps that justify the system proposed in this project.
-
-The broader academic literature on NDVI-based crop monitoring, machine learning for agriculture, and decision support systems is reviewed, establishing the theoretical foundations on which this project's methodology is built.
+This chapter works through five relevant platforms — FarmLogs, SatAgro, Farmerline, Digital Green, and Regrow Ag — assessing each for technical capability, accessibility, and fit with the Zimbabwean smallholder context. It also reviews the academic literature on NDVI monitoring, machine learning for agriculture, and decision support system design that underpins the methodology used in this project.
 
 \section{Related Works}
 
 \subsection{FarmLogs (TELUS Agriculture)}
 
-FarmLogs, subsequently acquired by TELUS Agriculture, is a cloud-based farm management platform that provides satellite field imagery, crop health monitoring through NDVI visualisation, and weather-based planting recommendations \citep{farmerline2023}. The platform is designed primarily for North American grain farming operations, offering integration with GPS-tracked field equipment, soil sampling data, and yield history. Its NDVI imagery is derived from Landsat and Sentinel-2 satellite data, processed and presented as a time-series health index.
+FarmLogs — now part of TELUS Agriculture — is a cloud-based farm management platform covering satellite field imagery, NDVI crop health monitoring, and weather-based planting recommendations \citep{farmerline2023}. It integrates with GPS-tracked equipment and soil sampling records, and it presents NDVI as a time-series health index derived from Landsat and Sentinel-2 data. Technically, it's a solid demonstration that web-based NDVI monitoring works.
 
-From the perspective of this project's requirements, FarmLogs demonstrates the technical viability of web-based NDVI crop monitoring. However, it operates on a subscription pricing model that has historically ranged from USD 300 to USD 600 per year for its full feature set \citep{wolfert2017}. This cost structure is economically prohibitive for Zimbabwean smallholder tobacco farmers whose net annual income from a single season may be comparable to or lower than the subscription fee. Furthermore, FarmLogs provides no tobacco-specific thresholds, no temporal trend alerting calibrated to tropical growing seasons, and no spatial hotspot detection within field polygons beyond basic imagery overlays. As \citet{liakos2018} observe, effective agricultural decision support systems must incorporate domain-specific agronomic knowledge to be operationally useful, a criterion FarmLogs does not meet for tobacco cultivation.
+The problem is everything else. Subscriptions run USD~300 to USD~600 per year \citep{wolfert2017} — in the same ballpark as a Zimbabwean smallholder farmer's entire net income from a season. Beyond cost, the platform is built for North American grain farming. Its thresholds, recommendation logic, and calibration are designed for maize and soybean in temperate climates, not tobacco in Zimbabwe's tobacco belt. \citet{liakos2018} make the point plainly: an agricultural decision support system that hasn't been calibrated for the crop and context it's being applied to simply isn't useful. FarmLogs hasn't been.
 
 \subsection{SatAgro}
 
-SatAgro is a European satellite monitoring service built on Sentinel-1 and Sentinel-2 imagery, providing NDVI time-series, field zoning, and variable-rate application zone maps for European cereal and oilseed farming \citep{satagtro2023}. The platform demonstrates a technically sophisticated use of multispectral satellite data: it computes NDVI statistics per field polygon, generates within-field variability maps, and supports precision application of fertilisers through variable-rate prescription maps.
+SatAgro is a European service that uses Sentinel-1 and Sentinel-2 imagery to produce NDVI time-series, field zone maps, and variable-rate fertiliser prescription maps for cereal and oilseed farming \citep{satagtro2023}. It computes per-polygon NDVI statistics and generates within-field variability maps — exactly the kind of spatial hotspot analysis this project implements.
 
-SatAgro's within-field variability analysis is the closest existing commercial analogue to the spatial hotspot functionality implemented in this project. However, SatAgro is operationally restricted to European markets and calibrated for temperate-climate crops. It has no deployment in Africa and no provision for tropical growing conditions, cloud-season imagery gaps typical of Zimbabwe's rainy season from November to March, or tobacco-specific agronomic thresholds. Technically, SatAgro also requires a subscription and does not expose its satellite processing pipeline for free access. The comparison nonetheless validates the within-field variability approach as a technically proven capability worth implementing in the Zimbabwean context.
+That makes SatAgro the closest commercial analogue to one part of what this system does. But the similarity ends there. SatAgro operates in European markets only, is calibrated for temperate-climate crops, and has no provision for the cloud-cover gaps that characterise Zimbabwe's rainy season from November to March. It's also subscription-based. Nonetheless, the fact that within-field variability mapping is a commercially proven capability in another context validates building it here.
 
 \subsection{Farmerline}
 
-Farmerline is a Ghanaian agri-tech company that has deployed digital farming tools across several West and East African markets, providing weather forecasts, crop management advice, and market price information through both smartphone applications and interactive voice response systems for feature phones \citep{farmerline2023}. Its design specifically targets smallholder farmers in developing regions with limited internet connectivity and technical literacy, making it contextually closer to this project's deployment environment than the commercial platforms reviewed above.
+Farmerline is a Ghanaian company that has deployed digital farming tools across West and East Africa, reaching smallholder farmers through smartphone apps and interactive voice response systems for feature phones \citep{farmerline2023}. It provides weather forecasts, crop management advice, and market price information — and it actually reaches the kinds of farmers this project is designed for. In that sense it's more contextually relevant than anything in the commercial platform category above.
 
-Farmerline demonstrates that agricultural technology can be adapted successfully for smallholder farmer contexts in sub-Saharan Africa. However, the platform does not incorporate satellite imagery or NDVI-based crop health analysis. Its agricultural advice is rule-based and generic, derived from crop calendars and generalised weather data rather than field-specific satellite observations. As \citet{rose2016} argue, decision support systems that rely on generic rules without field-level observational data cannot provide the specificity needed to guide individual farm management decisions effectively. Farmerline's success in user adoption nonetheless validates the user-interface design principles — plain language, minimal technical terminology, and accessibility on entry-level hardware — that this project adopts.
+What Farmerline doesn't do is satellite monitoring. Its advice comes from crop calendars and generalised weather data, not from field-specific observations. \citet{rose2016} note that this is a fundamental limitation: decision support tools built on generic rules without field-level data can't be specific enough to be genuinely useful on an individual farm. That said, Farmerline's success at getting farmers to actually adopt the tool is instructive. Plain language, minimal jargon, and a design that works on entry-level hardware — those are the interface principles this project takes directly from Farmerline's playbook.
 
 \subsection{Digital Green}
 
-Digital Green is an international NGO-driven platform that uses video-based peer learning and digital tools to improve smallholder farmer practice across South Asia and Sub-Saharan Africa, including Zimbabwe \citep{digitalgreen2023}. The platform has worked with Zimbabwe's Ministry of Agriculture to disseminate good agricultural practices through community video screenings and mobile-based advisory services. Digital Green's programmes have demonstrated measurable yield improvements in smallholder farming communities, validating the effectiveness of technology-mediated agricultural extension in the Zimbabwean context.
+Digital Green is an NGO-driven platform that uses video-based peer learning and mobile advisory tools to improve smallholder farming practice across South Asia and Sub-Saharan Africa, including Zimbabwe \citep{digitalgreen2023}. It has worked directly with Zimbabwe's Ministry of Agriculture to spread good agricultural practice through community video screenings. The yield improvements it has demonstrated in smallholder communities are real evidence that technology-mediated extension works in the Zimbabwean context.
 
-Digital Green does not, however, provide satellite monitoring, NDVI analysis, or field-level crop health assessment. Its contribution is in the dissemination of general best practices rather than in field-specific precision monitoring. This distinction is important: the system proposed in this project aims to complement extension services like Digital Green by providing the field-level observational data that extension advice cannot replace. The two approaches are complementary rather than competing.
+But Digital Green doesn't do satellite monitoring, NDVI analysis, or field-level health assessment. Its role is disseminating general best practices, not providing field-specific precision data. The two functions aren't in competition — a farmer who uses Digital Green for agronomic education and this system for field-level health monitoring is better served than one using either alone.
 
 \subsection{Regrow Ag}
 
-Regrow Ag is a precision agriculture platform focused on sustainable crop production measurement and carbon sequestration quantification, using satellite data, crop simulation models, and machine learning to produce field-level sustainability metrics for large agricultural supply chains \citep{regrow2023}. While technically advanced, Regrow Ag is designed for use by agricultural commodity companies and large cooperatives rather than individual smallholder farmers. Its satellite analysis pipeline processes Sentinel-2 and Landsat imagery at scale, but the results are presented through corporate sustainability dashboards rather than farmer-facing interfaces.
+Regrow Ag uses satellite data, crop simulation models, and machine learning to measure sustainable crop production and quantify carbon sequestration for large agricultural supply chains \citep{regrow2023}. The processing pipeline is technically sophisticated — it handles Sentinel-2 and Landsat imagery at scale. But the outputs go to corporate sustainability dashboards, not to farmers. Regrow Ag is built for commodity companies and cooperatives, not for individuals.
 
-Regrow Ag is the only platform reviewed here that explicitly incorporates temporal NDVI trend analysis within its methodology, computing seasonal vegetation trajectories to estimate crop productivity and carbon fluxes. This validates the temporal trend analysis approach at the core of this project. However, Regrow Ag's inaccessibility to individual farmers and its focus on carbon markets rather than crop health monitoring leave a clear gap in the precision agriculture landscape for a farmer-facing temporal monitoring system.
+The interesting thing about Regrow Ag, in the context of this project, is that it's the only platform reviewed here that explicitly incorporates temporal NDVI trend analysis. It computes seasonal vegetation trajectories to estimate crop productivity. That's validation for the core analytical approach this project uses. The gap Regrow Ag leaves open is a farmer-facing version of that same capability — which is precisely what this project fills.
 
 \subsection{Academic Foundations}
 
-Beyond commercial platforms, this project draws on a well-established academic literature in satellite remote sensing, machine learning for agriculture, and decision support systems.
+The academic literature provides the methodological backbone for this project's approach.
 
-\citet{rouse1974} established NDVI as a fundamental metric for vegetation health monitoring, demonstrating its correlation with biomass and photosynthetic activity. Subsequent work by \citet{tucker1979} confirmed NDVI's sensitivity to vegetation stress through its relationship with chlorophyll absorption in the red band and structural scattering in the near-infrared, establishing the physiological basis for NDVI as an early-warning indicator that predates visual symptom expression.
+\citet{rouse1974} established NDVI as a reliable vegetation health metric by demonstrating its correlation with biomass and photosynthetic activity. \citet{tucker1979} then confirmed the physiological basis: NDVI responds to chlorophyll absorption in the red band and canopy scattering in the near-infrared in ways that precede visible stress symptoms — making it genuinely useful as an early-warning indicator rather than just a diagnostic one.
 
-\citet{weiss2020} provide a comprehensive meta-review of remote sensing applications in agriculture, demonstrating across 110 studies that satellite-derived vegetation indices achieve reliable classification of crop health status with prediction accuracy exceeding 80\% in most controlled studies. Sentinel-2 imagery, with its 10-metre spatial resolution and 5-to-10-day revisit frequency, is identified as the most suitable freely available satellite data source for field-scale crop monitoring.
+\citet{weiss2020} meta-reviewed 110 remote sensing studies in agriculture and found that satellite-derived vegetation indices reliably classify crop health status, with prediction accuracy exceeding 80\% in most controlled settings. They identify Sentinel-2 — 10-metre resolution, 5-to-10-day revisit — as the best freely available data source for field-scale monitoring, which is why this project uses it.
 
-In the domain of machine learning for agriculture, \citet{liakos2018} review 40 studies and identify logistic regression, support vector machines, and random forests as the most widely applied classification algorithms, noting that logistic regression—despite its simplicity—frequently achieves accuracy comparable to more complex models on datasets where features are well-engineered and class boundaries are relatively stable. This observation directly motivates the algorithm selection in this project. \citet{chlingaryan2018} further demonstrate that the combination of NDVI with weather variables (temperature and precipitation) consistently improves crop health classification accuracy over NDVI-only models.
+On machine learning, \citet{liakos2018} reviewed 40 agriculture studies and found that logistic regression, SVMs, and random forests dominate the literature. Critically, they note that logistic regression — despite its apparent simplicity — frequently matches more complex models when the features are well-engineered and class boundaries are reasonably stable. That observation directly informs the algorithm choice here. \citet{chlingaryan2018} add that combining NDVI with weather variables (temperature and precipitation) consistently outperforms NDVI-only models for crop health classification, which is why the feature set in this project includes both.
 
-The importance of explainability in agricultural decision support systems is emphasised by \citet{rose2016}, who find through a systematic review of 40 agricultural decision tools that farmer adoption rates are strongly correlated with system transparency: tools that explain the reasoning behind recommendations are significantly more likely to be trusted and acted upon than those that provide recommendations without justification. This finding is central to the design of this project's recommendation engine.
-
-Finally, \citet{wolfert2017} review the architecture of big data systems in precision agriculture, noting the importance of modular, scalable architectures that separate data acquisition, analysis, and presentation layers—a design principle directly implemented in this project's three-layer architecture.
+\citet{rose2016} reviewed 40 agricultural decision support tools and found that farmer adoption correlates strongly with transparency: tools that explain their reasoning get trusted and used; black-box tools don't. That finding shapes the entire recommendation engine in this project. And \citet{wolfert2017}, reviewing big data architectures in precision agriculture, make the case for separating data acquisition, analysis, and presentation — the three-layer design principle implemented here.
 
 \section{Conclusion}
 
-The review of existing platforms reveals a consistent pattern across the commercial landscape: the systems with the strongest technical capabilities—FarmLogs, SatAgro, Regrow Ag—are designed for large-scale operations in developed-market geographies and require subscription fees that exclude smallholder farmers. The systems that have successfully reached smallholder farmers in developing regions—Farmerline, Digital Green—lack satellite-based crop health monitoring and field-level precision. No existing platform combines live satellite NDVI analysis, temporal trend detection, within-field spatial variability mapping, and tobacco-specific recommendation logic in a freely accessible, farmer-facing web interface designed for Zimbabwean conditions.
+The pattern across the commercial landscape is consistent: the platforms with the strongest technical capability — FarmLogs, SatAgro, Regrow Ag — are built for large operations in developed markets and priced accordingly. The platforms that have genuinely reached smallholder farmers in developing regions — Farmerline, Digital Green — don't do satellite monitoring or field-level precision analysis. There's no platform that does both.
 
-The academic literature confirms the technical validity of the approach: NDVI derived from Sentinel-2 imagery is a reliable, early-warning indicator of crop stress; logistic regression trained on NDVI and weather features achieves high classification accuracy; and explainable recommendation systems achieve higher farmer adoption than black-box alternatives. Temporal trend analysis over multi-week observation windows is identified as a particularly valuable but underutilised capability in farmer-facing tools.
+More specifically, nothing in this review combines live satellite NDVI analysis, temporal trend detection, within-field spatial variability mapping, and crop-specific recommendation logic in a single free, farmer-facing web interface calibrated for Zimbabwean conditions.
 
-These findings collectively justify the system proposed in this project and define the specific technical and design requirements addressed in the chapters that follow.
+The academic literature validates the individual technical components: Sentinel-2 NDVI is a proven early-warning indicator; logistic regression on NDVI and weather features works; explainable systems get adopted at higher rates than opaque ones; and temporal trend analysis is genuinely valuable but largely absent from farmer-facing tools. Together, these findings define exactly what needs to be built.
 
 % ============================================================
 \chapter{Requirements Analysis}
@@ -467,81 +463,81 @@ These findings collectively justify the system proposed in this project and defi
 
 \section{Introduction}
 
-Requirements engineering is the process of systematically identifying, documenting, and validating the needs that a system must satisfy before design and development begin. \citet{sommerville2016} argues that errors introduced at the requirements stage are consistently the most expensive to correct, as each subsequent development phase amplifies the cost of addressing a misunderstood or missing requirement. For this project, requirements were elicited through a combination of direct observation of current tobacco farming monitoring practices, structured interviews with farmers and agricultural extension officers, a distributed questionnaire, document analysis of existing systems and research literature, and prototyping exercises conducted with prospective users.
+Getting requirements wrong at the start is expensive. \citet{sommerville2016} makes the point that errors introduced during requirements engineering cost more with every subsequent phase that builds on top of them. For this project, requirements were gathered through direct observation of current tobacco monitoring practice, structured interviews with farmers and extension officers, a questionnaire distributed to 20 stakeholders, analysis of existing systems and published literature, and early prototyping exercises with prospective users.
 
-This chapter first evaluates alternative development approaches, then defines user requirements, assesses system feasibility across technical, economic, and operational dimensions, and concludes with a work plan for the project.
+This chapter evaluates the development alternatives that were considered before custom-build was chosen, defines the requirements for three user roles, assesses technical, economic, and operational feasibility, and closes with the project work plan.
 
 \subsection{Evaluate Alternatives}
 
-Before committing to a custom-built system, two principal alternatives were systematically evaluated.
+Two alternatives were examined before committing to a custom build.
 
-The first alternative was to deploy and configure an existing commercial precision agriculture platform for use by Zimbabwean tobacco farmers. Platforms reviewed in Chapter 2, including FarmLogs and SatAgro, were assessed against the specific requirements of smallholder tobacco monitoring in Zimbabwe. This alternative was rejected for three reasons: prohibitive subscription costs that cannot be sustained by smallholder farmers; absence of tobacco-specific NDVI thresholds and recommendation logic; and lack of deployment or support infrastructure in Zimbabwe. As \citet{wolfert2017} observe, commercial precision agriculture platforms designed for developed-market farming contexts frequently fail in technology transfer to smallholder environments due to structural mismatches in cost, connectivity, and agronomic calibration.
+The first was to configure an existing commercial precision agriculture platform. The platforms reviewed in Chapter~2 — FarmLogs and SatAgro in particular — were assessed against the Zimbabwean smallholder tobacco context and rejected on three grounds: subscription pricing that farmers can't sustain; no tobacco-specific NDVI thresholds or recommendation logic; and no deployment or support infrastructure in Zimbabwe. \citet{wolfert2017} note that commercial platforms built for developed-market farming regularly fail in smallholder technology transfer precisely because of these structural mismatches.
 
-The second alternative was to develop a plugin or extension layer on top of an existing open-source GIS platform such as QGIS or Open Data Cube. While this would leverage existing satellite data processing infrastructure, it would require users to install and configure specialised GIS software—a technical barrier that is inconsistent with the accessibility requirements for smallholder farmers with basic digital literacy. Additionally, these platforms provide no machine learning inference, no recommendation engine, and no web-based user interface deployable without local installation.
+The second was to build an extension layer on an open-source GIS platform like QGIS or Open Data Cube. That would have given access to satellite processing infrastructure, but would have required users to install and configure specialised GIS software — completely at odds with the accessibility requirement for farmers with basic digital literacy. Neither option offered a machine learning inference pipeline, a recommendation engine, or a deployable web interface.
 
-The custom development approach was therefore selected as the most appropriate path, allowing the system to be designed specifically around the requirements of Zimbabwean tobacco farmers without inheriting the constraints of existing platforms.
+Custom development was the right choice, and that's what was built.
 
 \subsection{Outsourcing}
 
-Outsourcing the development to a commercial software house or freelance developer was considered and rejected. The system's requirement for tobacco-specific agronomic knowledge, intimate familiarity with the Google Earth Engine API for Zimbabwean satellite data, and iterative design refinement based on farmer feedback makes close in-house control of the development process essential. \citet{pfleeger2010} note that outsourcing is most effective when requirements are fully specified and stable before development begins—conditions that do not hold in a research and prototyping context where requirements evolve through building, testing, and farmer feedback. Maintaining full control of the codebase is also necessary for the long-term academic contribution and potential open-source release of the system.
+Outsourcing was also considered and ruled out. The system requires tobacco-specific agronomic knowledge, close familiarity with the GEE API for Zimbabwean satellite data, and the kind of iterative refinement that only works when the developer is deeply embedded in the problem. \citet{pfleeger2010} note that outsourcing works best when requirements are fully specified and stable upfront — which isn't the case in a research and prototyping context where requirements evolve through building and testing. Keeping the codebase in-house is also a prerequisite for the academic contribution and any future open-source release.
 
 \subsection{Improvement Over the Current System}
 
-The proposed system improves on the existing manual monitoring approach in the following concrete ways:
+Five specific improvements over manual monitoring:
 
 \begin{itemize}
-  \item \textbf{Timeliness:} Satellite analysis is available every 5--10 days, aligned with Sentinel-2 revisit cycles, compared to the weekly or fortnightly manual field inspections that characterise current practice.
-  \item \textbf{Objectivity:} NDVI values derived from satellite multispectral reflectance are quantitative and reproducible, replacing subjective visual assessments by individual inspectors.
-  \item \textbf{Early detection:} Temporal trend analysis detects declining NDVI trajectories 7--14 days before visible stress symptoms develop, enabling intervention within the effective treatment window.
-  \item \textbf{Spatial precision:} Within-field heatmap analysis identifies localised stress zones that aggregate inspection would miss.
-  \item \textbf{Cost:} The system eliminates the cost of frequent manual field inspections and uses exclusively free data sources, reducing the monitoring cost per hectare substantially.
+  \item \textbf{Timeliness:} Sentinel-2 revisit cycles give satellite analysis every 5--10 days, versus the weekly or fortnightly inspections that pass for ``frequent'' monitoring under current practice.
+  \item \textbf{Objectivity:} NDVI values come from satellite reflectance measurements. They're quantitative and reproducible, not dependent on how tired the inspector is that day.
+  \item \textbf{Early detection:} Temporal trend analysis flags declining NDVI trajectories 7--14 days before anything shows up visually, giving farmers an actual intervention window.
+  \item \textbf{Spatial precision:} Within-field heatmapping shows exactly where stress is concentrated — something a walking inspection covering three to five points in a field reliably misses.
+  \item \textbf{Cost:} No recurring fees. The system uses exclusively free data sources, and automated monitoring replaces at least some of the physical inspection visits.
 \end{itemize}
 
-\citet{pfleeger2010} argue that usability improvements that directly affect the timeliness and accuracy of decisions are not cosmetic enhancements but core system requirements; this principle underpins the design priorities throughout this project.
+\citet{pfleeger2010} make the point that improvements which directly affect decision timeliness and accuracy aren't cosmetic — they're core requirements. That principle runs through every design decision in this project.
 
 \subsection{Development Approach}
 
-The system is developed using a modular, three-layer architecture that separates data acquisition, machine learning analysis, and user interface concerns. This separation enables independent development, testing, and updating of each layer without requiring changes to others. The machine learning model is trained offline in Python using scikit-learn and exported as a JSON weight file for consumption by the JavaScript web application, enabling serverless deployment without Python runtime infrastructure \citep{pedregosa2011}. The web application is built on Next.js 14 with the App Router architecture, TypeScript for type safety, and Prisma as the database ORM. An Agile development methodology is applied, with two-week sprints, iterative prototyping, and weekly supervisor reviews.
+The system uses a three-layer architecture: data acquisition, machine learning analysis, and user interface. Each layer can be developed, tested, and updated independently. The ML model trains offline in Python with scikit-learn \citep{pedregosa2011} and gets exported as a JSON weight file, so the Next.js application can run inference in JavaScript without needing a Python server at all. The web layer is Next.js~14 with the App Router, TypeScript throughout, and Prisma as the ORM. Development follows an Agile approach — two-week sprints, iterative prototyping, weekly supervisor check-ins.
 
 \section{User Requirements}
 
-Three distinct user roles interact with the system, each with specific requirements:
+Three user roles interact with the system:
 
 \noindent\textbf{Farmer Requirements:}
 \begin{itemize}[leftmargin=2cm]
-  \item The system shall allow farmers to register and log in using email and password credentials.
-  \item The system shall enable farmers to define field boundaries by drawing polygons on an interactive satellite map.
-  \item The system shall allow farmers to trigger a crop health analysis for any defined field with a single action.
-  \item The system shall present analysis results in plain language with colour-coded health status indicators.
-  \item The system shall provide specific, actionable recommendations for irrigation, disease monitoring, and field inspection.
-  \item The system shall display a historical list of previous analyses for each field.
-  \item The system shall function on standard web browsers on smartphones with mobile data connectivity.
+  \item Register and log in with email and password.
+  \item Draw field boundary polygons on an interactive satellite map.
+  \item Trigger a crop health analysis for any saved field with a single action.
+  \item Receive analysis results in plain language with colour-coded health status indicators.
+  \item Get specific, actionable recommendations covering irrigation, disease monitoring, and field inspection.
+  \item View a history of previous analyses for each field.
+  \item Access all of the above on a smartphone browser with mobile data.
 \end{itemize}
 
 \noindent\textbf{Agronomist Requirements:}
 \begin{itemize}[leftmargin=2cm]
-  \item The system shall allow agronomists to view satellite analysis results for fields assigned to them.
-  \item The system shall present NDVI time-series trend data in chart form to support agronomist assessment.
-  \item The system shall provide within-field heatmap visualisation of NDVI spatial variability.
-  \item The system shall display the raw feature values (mean NDVI, trend slope, variance, temperature, rainfall) underlying each classification decision.
-  \item The system shall allow agronomists to access analysis history across multiple growing seasons.
+  \item View satellite analysis results for assigned fields.
+  \item See NDVI time-series trend data in chart form.
+  \item Access within-field heatmap visualisations of NDVI spatial variability.
+  \item Inspect the raw feature values (mean NDVI, trend slope, variance, temperature, rainfall) behind each classification.
+  \item Browse analysis history across multiple growing seasons.
 \end{itemize}
 
 \noindent\textbf{System Administrator Requirements:}
 \begin{itemize}[leftmargin=2cm]
-  \item The system shall allow administrators to manage user accounts, including creation, role assignment, and deactivation.
-  \item The system shall allow administrators to configure system-level parameters including NDVI threshold values and recommendation rule weights.
-  \item The system shall provide administrators with system usage logs for auditing and monitoring.
-  \item The system shall enforce secure authentication and role-based access controls for all administrative functions.
+  \item Manage user accounts: create, assign roles, deactivate.
+  \item Configure system-level parameters including NDVI threshold values and recommendation rule weights.
+  \item Access usage logs for auditing and monitoring.
+  \item Enforce secure authentication and role-based access controls across all administrative functions.
 \end{itemize}
 
 \subsection{Data Collection Phase}
 
-Requirements were elicited through the following methods, following the structured elicitation framework recommended by \citet{sommerville2016}:
+Requirements were gathered through four methods \citep{sommerville2016}:
 
-\noindent\textbf{Structured Interviews:} Semi-structured interviews were conducted with five tobacco farmers in the Mvurwi farming area of Mashonaland Central Province and three agricultural extension officers from the Agritex provincial office. The interviews explored current monitoring practices, frequency of field inspections, awareness of satellite technology, and willingness to adopt a digital monitoring system. Key findings included: all five farmers reported detecting water stress only after wilting was visible; none were aware of NDVI as a monitoring technique; all expressed strong interest in a system that could provide advance warning of stress conditions.
+\noindent\textbf{Structured Interviews:} Semi-structured interviews with five tobacco farmers in the Mvurwi area of Mashonaland Central Province and three Agritex extension officers. The conversations covered current monitoring practice, inspection frequency, awareness of satellite tools, and appetite for a digital alternative. All five farmers said they detect water stress only once wilting is already visible. None had heard of NDVI. All wanted a system that could warn them earlier.
 
-\noindent\textbf{Questionnaire:} A structured questionnaire was distributed to 20 IT and agriculture stakeholders including smallholder farmers, cooperative managers, and extension officers. The questionnaire is presented below.
+\noindent\textbf{Questionnaire:} A structured questionnaire distributed to 20 stakeholders — smallholder farmers, cooperative managers, and extension officers. It is reproduced below.
 
 \vspace{0.5cm}
 \noindent\rule{\linewidth}{0.4pt}
@@ -611,13 +607,13 @@ Requirements were elicited through the following methods, following the structur
 \noindent\rule{\linewidth}{0.4pt}
 \vspace{0.3cm}
 
-\noindent\textbf{Document Analysis:} Existing Agritex crop assessment forms, the TIMB annual report \citep{timb2023}, and the Ministry of Agriculture's Zimbabwe Agricultural Development Strategy II \citep{moa2022} were reviewed to identify which crop health parameters are currently collected and at what frequency, informing the design of the analysis output format.
+\noindent\textbf{Document Analysis:} Agritex crop assessment forms, the TIMB annual report \citep{timb2023}, and the Zimbabwe Agricultural Development Strategy~II \citep{moa2022} were reviewed to identify what health parameters are currently recorded and at what frequency, which shaped the analysis output format.
 
-\noindent\textbf{Direct Observation:} Observation of a tobacco field inspection session in Mvurwi district confirmed that inspectors assess only three to five points within a field during a standard visit, missing an estimated 60--80\% of field area. This observation directly motivated the within-field spatial variability analysis requirement.
+\noindent\textbf{Direct Observation:} Attending a field inspection session in Mvurwi district confirmed that a standard visit covers just three to five assessment points in a field — missing an estimated 60--80\% of the total area. That observation directly drove the within-field spatial variability requirement.
 
 \subsection{Technical Feasibility}
 
-The proposed system relies on well-established, extensively documented technologies. The Google Earth Engine API for Sentinel-2 data retrieval is a mature service with comprehensive documentation and an active developer community, and has been used in peer-reviewed agricultural monitoring research in Zimbabwe \citep{rwizi2021}. The Next.js, React, and scikit-learn frameworks are among the most widely used web and machine learning libraries respectively, with large communities, long-term support commitments, and extensive learning resources. All chosen technologies are within the developer's existing skill set, and no significant technical risks that would prevent delivery within the project timeline have been identified. \citet{perera2015} highlight that systems built on open, well-supported APIs with clear documentation have substantially lower technical risk profiles than those dependent on proprietary or experimental interfaces.
+The technology stack is well-established. The GEE API for Sentinel-2 retrieval is a mature service with thorough documentation, an active developer community, and verified use in Zimbabwean agricultural research \citep{rwizi2021}. Next.js, React, and scikit-learn are all widely adopted with strong long-term support. Everything in the stack falls within the developer's existing skill set. No significant technical risks to the project timeline have been identified. \citet{perera2015} note that systems built on open, well-documented APIs carry substantially lower technical risk than those relying on proprietary or experimental interfaces — a relevant point here.
 
 \subsection{Hardware Requirements}
 
@@ -646,15 +642,15 @@ The proposed system relies on well-established, extensively documented technolog
 
 \subsection{Technical Expertise}
 
-Successful development requires proficiency in the following areas: TypeScript and React for frontend development; Next.js App Router and REST API design for backend development; Python and scikit-learn for machine learning model training and evaluation; PostgreSQL and PostGIS for spatial data management; the Google Earth Engine API for satellite data retrieval and NDVI computation; Git for version control and collaborative development; and basic information security practices including authentication, password hashing, and HTTPS enforcement.
+The development requires working proficiency in TypeScript and React for the frontend; Next.js App Router and REST API design for the backend; Python and scikit-learn for model training; PostgreSQL and PostGIS for spatial data; the GEE API for satellite retrieval; Git for version control; and basic security practices including authentication, password hashing, and HTTPS.
 
 \section{Economic Feasibility}
 
-The project is economically justified on the basis of both its development costs and its expected operational benefits to Zimbabwean tobacco farmers.
+The economics are favourable from both development and operational perspectives.
 
 \subsection{Cost-Benefit Analysis}
 
-Table~\ref{tab:costbenefit} presents a two-year financial projection for the system's development and operational costs against anticipated savings and income improvements for a representative cohort of 50 smallholder tobacco farmers using the system.
+Table~\ref{tab:costbenefit} projects development and operating costs against anticipated savings for a representative cohort of 50 smallholder tobacco farmers over two years.
 
 \begin{table}[H]
   \centering
@@ -683,35 +679,35 @@ Table~\ref{tab:costbenefit} presents a two-year financial projection for the sys
   \end{tabularx}
 \end{table}
 
-The analysis demonstrates a positive net benefit from Year 1, with cumulative net benefit exceeding USD 8,000 over two years for a 50-farmer cohort. \citet{gebbers2010} demonstrate that precision agriculture interventions typically yield 5--15\% improvement in input efficiency and crop output in smallholder contexts, supporting the conservative 5\% yield improvement assumption used above.
+The analysis returns a positive net benefit from Year~1, with cumulative net benefit exceeding USD~8,000 over two years across 50 farmers. The 5\% yield improvement assumption is deliberately conservative; \citet{gebbers2010} show precision agriculture interventions in smallholder contexts typically deliver 5--15\% improvements in input efficiency and output.
 
 \subsection{Tangible Benefits}
 
 \begin{itemize}
-  \item \textbf{Early stress detection:} Detecting water stress 7--14 days earlier than visual inspection allows farmers to irrigate within the effective intervention window, preventing the leaf quality deterioration that reduces auction prices \citep{rouse1974}.
-  \item \textbf{Reduced inspection cost:} Automated satellite monitoring reduces the frequency of physical field inspections required, saving both farmer time and hired labour costs.
-  \item \textbf{Targeted intervention:} Within-field hotspot identification enables targeted agrochemical application to specific stress zones rather than uniform field-wide treatment, reducing chemical input costs.
-  \item \textbf{Zero data subscription cost:} The use of Google Earth Engine and Open-Meteo free tiers eliminates satellite data costs that would otherwise accrue at USD 50--200 per hectare per season with commercial providers.
+  \item \textbf{Early stress detection:} A 7--14 day warning before symptoms appear means farmers can irrigate within the effective treatment window, protecting leaf quality and auction prices \citep{rouse1974}.
+  \item \textbf{Reduced inspection cost:} Automated satellite monitoring reduces the number of physical inspection visits needed, saving farmer time and hired labour.
+  \item \textbf{Targeted intervention:} Hotspot identification means agrochemicals can be applied to stressed zones only, rather than the whole field, cutting input costs.
+  \item \textbf{Zero subscription cost:} GEE and Open-Meteo are both free. Commercial satellite data for the same coverage would run USD~50--200 per hectare per season.
 \end{itemize}
 
 \subsection{Intangible Benefits}
 
 \begin{itemize}
-  \item \textbf{Improved decision confidence:} Quantitative NDVI data provides an objective basis for farming decisions, reducing uncertainty and improving farmer confidence in intervention timing.
-  \item \textbf{Capacity building:} Regular engagement with NDVI data and trend analysis builds farmer understanding of plant physiology and precision agriculture concepts, contributing to long-term agricultural literacy.
-  \item \textbf{Reduced environmental impact:} Targeted application of irrigation water and agrochemicals reduces runoff, groundwater draw-down, and chemical residue in the environment.
-  \item \textbf{Demonstration effect:} A successful open-source deployment in Zimbabwe creates a replicable model for other smallholder crop types and other countries in Southern Africa.
+  \item \textbf{Decision confidence:} Quantitative NDVI data gives farmers an objective basis for timing interventions, reducing the uncertainty that comes with ``the crop looks a bit off'' judgements.
+  \item \textbf{Agricultural literacy:} Regular engagement with trend data builds farmer understanding of plant physiology and precision agriculture over time.
+  \item \textbf{Environmental impact:} Targeted irrigation and agrochemical use reduces runoff, groundwater draw-down, and chemical residues.
+  \item \textbf{Demonstration effect:} A working open-source deployment in Zimbabwe creates a replicable template for other smallholder crops and other Southern African countries.
 \end{itemize}
 
 \section{Operational Feasibility}
 
-The system is designed to integrate into, rather than disrupt, existing tobacco farming workflows. Farmers already conduct field assessments; the system supplements this practice by providing a satellite-derived health status check that can be triggered from a smartphone in under three minutes. The interface requires no specialised training beyond the ability to navigate a basic website, consistent with the digital literacy levels of smartphone-owning farmers in Zimbabwe's farming areas.
+The system fits into existing workflows rather than demanding new ones. Farmers already inspect fields; this just adds a satellite-derived health check they can trigger from a smartphone in under three minutes, requiring nothing beyond the ability to navigate a basic website.
 
-Agricultural extension officers at Agritex offices are the natural support channel for system adoption: they already interact with farmers during seasonal visits, understand the agronomic context, and can provide first-line assistance with field polygon setup. This reduces the institutional adoption barrier. \citet{wieringa2014} recommends that operational feasibility assessments consider not only whether a system can be used, but whether it will be accepted and sustained within the organisation's existing processes and culture — a criterion met by this system's design of complementing rather than replacing human judgement.
+Agritex extension officers are the natural adoption channel. They visit farmers seasonally, understand the agronomic context, and can help with first-time polygon setup. That support structure already exists. \citet{wieringa2014} argues that operational feasibility hinges not just on whether a system can be used, but whether it'll be accepted and sustained within existing workflows — and a system designed to complement rather than replace human judgement is far easier to accept.
 
 \subsection{Schedule Feasibility}
 
-The project is planned across a twelve-month period from March 2024 to February 2025, with clearly defined phases and measurable deliverables at each milestone. The availability of open-source frameworks and free APIs substantially reduces the time required for infrastructure setup, allowing a greater proportion of development time to be directed towards feature implementation and farmer-facing refinement.
+The project runs twelve months, March 2024 to February 2025, with clearly defined phases and measurable deliverables at each milestone. Because the entire stack uses open-source frameworks and free APIs, infrastructure setup is fast — which means more of the actual development time goes toward feature work and farmer-facing refinement.
 
 \section{Work Plan}
 
@@ -765,7 +761,7 @@ The project is organised into five phases:
 
 \section{Conclusion}
 
-This chapter has established the requirements baseline for the Satellite-Based Tobacco Crop Health Monitoring System. Alternative development approaches were evaluated and rejected in favour of a custom-built system designed specifically for the Zimbabwean smallholder tobacco context. User requirements were defined for three roles—farmer, agronomist, and system administrator—and four data collection methods grounded those requirements in direct observation of real farming practice. Technical, economic, and operational feasibility assessments confirm that the project is viable within the available resources, skills, and timeline. The Gantt chart provides a structured delivery framework against which progress will be measured through supervisor reviews and milestone deliverables.
+The requirements baseline is established. Custom build was the only viable path — commercial platforms don't fit and outsourcing the domain knowledge required isn't practical. Requirements for all three user roles are grounded in actual field observations and interviews, not assumptions. Technical, economic, and operational feasibility checks all pass. The Gantt chart sets a realistic twelve-month delivery framework with clear milestones.
 
 % ============================================================
 \chapter{System Analysis}
@@ -773,27 +769,27 @@ This chapter has established the requirements baseline for the Satellite-Based T
 
 \section{Introduction}
 
-System analysis requires a thorough examination of the environment in which the proposed system will operate—both the existing processes it replaces and the new functionality it introduces. \citet{wieringa2014} argues that effective system design depends on a rigorous understanding of the current state, since improvement cannot be measured or designed without a clear baseline. This chapter analyses the existing tobacco crop monitoring system currently employed by Zimbabwean smallholder farmers, identifies its structural weaknesses, and presents the proposed system in detail through formal models including context diagrams, data flow diagrams, use case analysis, and UML diagrams.
+Good system design starts with an honest look at what it's replacing. \citet{wieringa2014} argues that improvement can't be measured or designed without a clear baseline — and he's right. This chapter starts there: a detailed analysis of the existing tobacco monitoring system, its structural weaknesses, and what the proposed system does differently. The analysis is presented through formal models — context diagrams, data flow diagrams, use case analysis, and UML diagrams.
 
 \section{Description of the Current System}
 
-The current tobacco crop monitoring system in use by smallholder farmers in Zimbabwe's key tobacco production provinces—Mashonaland Central, Mashonaland West, and Manicaland—is predominantly manual and inspection-based. The standard monitoring cycle operates as follows:
+In Zimbabwe's key tobacco provinces — Mashonaland Central, Mashonaland West, and Manicaland — crop monitoring is manual and entirely inspection-based. The standard cycle works like this:
 
-A farmer or hired inspector physically walks the field, typically covering three to five observation points per hectare. At each point, a visual assessment is made of leaf colour, plant posture, and visible pest or disease symptoms. Observations are recorded informally—typically in a notebook or held in memory—and a monitoring decision (irrigate, apply pesticide, contact agronomist) is made based on the inspector's experience and visual assessment alone.
+A farmer or hired inspector walks the field, covering three to five observation points per hectare. At each point, they look at leaf colour, plant posture, and any visible pest or disease signs. Notes go in a notebook or stay in memory. The decision to irrigate, spray, or call an agronomist comes down to experience and what the inspector can see that day.
 
-In areas served by the Agritex extension service, an extension officer may visit the farm once per season, providing agronomic advice based on a single field visit. Farmers with access to tobacco cooperative membership may receive periodic newsletters with general seasonal advisories, but these are not field-specific.
+In areas with Agritex coverage, an extension officer might visit once per season. Cooperative members may receive a seasonal advisory newsletter. Neither is field-specific.
 
-Weather monitoring is conducted informally by observation of rainfall (measured in some cases by a basic rain gauge) and temperature (estimated rather than measured). No integration of weather data with field observations occurs systematically. The Zimbabwe Meteorological Services Department provides district-level weather forecasts, but these are at a spatial and temporal resolution too coarse for individual field management decisions.
+Weather monitoring is informal. Some farmers have a basic rain gauge; temperature is estimated. Zimbabwe's Meteorological Services provides district-level forecasts, but the spatial and temporal resolution is far too coarse to drive individual field management decisions.
 
-No satellite, drone, or sensor technology is currently employed by any of the smallholder farmers consulted during requirements gathering, consistent with the findings of \citet{nyoka2020}, who document the near-complete absence of remote sensing technology in Zimbabwe's smallholder tobacco farming sector.
+None of the smallholder farmers consulted during requirements gathering used any form of satellite, drone, or sensor technology. \citet{nyoka2020} document the same picture across the sector: remote sensing is almost entirely absent from Zimbabwean smallholder tobacco farming.
 
 \section{Analysis of the Existing System}
 
-The fundamental limitation of the current system is temporal: it operates reactively, detecting stress conditions only after they are visually manifest. \citet{tucker1979} established that NDVI declines measurably during early plant water stress 5--7 days before wilting or leaf colour change becomes visible. This means the current system's detection mechanism—visual inspection—is structurally incapable of the early warning that effective intervention requires.
+The most fundamental limitation is timing. The current system only detects stress once it's visually apparent. \citet{tucker1979} showed that NDVI begins declining during early water stress 5--7 days before wilting or leaf colour change becomes visible. That's the gap: visual inspection is structurally incapable of the early warning that effective intervention requires.
 
-A secondary limitation is spatial: manual inspection samples a fraction of field area, missing localised stress zones caused by soil compaction, drainage variation, pest entry points, or equipment trampling. \citet{weiss2020} demonstrate that satellite-derived within-field NDVI maps consistently reveal spatial heterogeneity that aggregate field-level assessments obscure.
+The second problem is coverage. Manual inspection samples a fraction of field area. Localised stress caused by soil compaction, drainage variation, pest entry points, or equipment trampling gets missed. \citet{weiss2020} demonstrate that satellite-derived within-field NDVI maps routinely expose spatial heterogeneity that aggregate field assessments hide entirely.
 
-From a data management perspective, the absence of systematic record-keeping means there is no historical trend data against which current observations can be compared. A declining NDVI trend—the most diagnostically significant early warning signal—cannot be detected without multi-point historical data, which the current system does not collect.
+The third is continuity. Without systematic record-keeping, there's no historical baseline to compare current readings against. A declining NDVI trend — arguably the most useful early-warning signal available — is invisible without multi-point historical data. The current system doesn't collect any.
 
 \subsection{Context Diagram of the Existing System}
 
@@ -832,28 +828,28 @@ Figure~\ref{fig:ctx_old} presents the context diagram of the existing tobacco mo
 \subsection{Weaknesses of the Current System}
 
 \begin{itemize}
-  \item \textbf{Reactive detection:} Stress is identified only after visual symptoms develop, missing the pre-symptom window when intervention is most effective.
-  \item \textbf{Incomplete spatial coverage:} Manual inspection covers only 5--15\% of field area per visit, leaving most of the field unmonitored.
-  \item \textbf{No data continuity:} Absence of systematic record-keeping prevents trend analysis, making it impossible to detect slow-developing stress trajectories.
-  \item \textbf{Subjectivity and variability:} Assessments depend on individual inspector experience and may vary significantly between observers or visits.
-  \item \textbf{Weather data isolation:} Environmental conditions are not integrated with field observations, preventing correlation of stress events with precipitation and temperature anomalies.
-  \item \textbf{High opportunity cost:} The labour and time required for regular manual field inspections represents a significant cost that limits monitoring frequency.
+  \item \textbf{Reactive detection:} Stress only registers once symptoms are visible — after the pre-symptom intervention window has already closed.
+  \item \textbf{Incomplete spatial coverage:} Manual inspection covers 5--15\% of field area per visit. Most of the field goes unmonitored.
+  \item \textbf{No data continuity:} No record-keeping means no trend analysis. Slow-developing stress trajectories are invisible.
+  \item \textbf{Subjectivity:} Assessments depend on individual inspector experience and vary between observers and visits.
+  \item \textbf{Weather isolation:} Environmental conditions aren't integrated with field observations. Stress events aren't correlated with rainfall or temperature anomalies.
+  \item \textbf{High opportunity cost:} The labour and time cost of regular manual inspections limits how often monitoring actually happens.
 \end{itemize}
 
 \section{Description of the Proposed Solution}
 
-The Satellite-Based Tobacco Crop Health Monitoring System replaces and substantially extends the existing monitoring capability through the integration of five core components:
+The proposed system addresses all six weaknesses above through five integrated components:
 
 \begin{enumerate}
-  \item \textbf{Interactive Field Definition:} Farmers define field boundaries by drawing polygons on a satellite basemap through the React-Leaflet web interface. Polygon coordinates are stored as GeoJSON in the PostgreSQL database.
+  \item \textbf{Interactive Field Definition:} Farmers draw field polygons directly on a satellite basemap using the React-Leaflet interface. Coordinates are stored as GeoJSON in the database.
 
-  \item \textbf{Live Satellite NDVI Retrieval:} For each analysis request, the system submits the field polygon to the Google Earth Engine API, which retrieves all available cloud-free Sentinel-2 Level-2A imagery within a configurable 14-to-30-day window, computes per-pixel NDVI from Band 8 (NIR) and Band 4 (Red), and returns both aggregate statistics and the spatial NDVI distribution across the field.
+  \item \textbf{Live Satellite NDVI Retrieval:} For each analysis request, the system submits the field polygon to GEE, which retrieves all available cloud-free Sentinel-2 Level-2A scenes within a configurable 14-to-30-day window, computes per-pixel NDVI from Band~8 (NIR) and Band~4 (Red), and returns aggregate statistics alongside the spatial NDVI distribution.
 
-  \item \textbf{Weather Data Integration:} Historical weather data for the analysis window is retrieved from the Open-Meteo API using the field centroid coordinates, providing daily temperature and precipitation records that are aggregated into the feature vector.
+  \item \textbf{Weather Data Integration:} The Open-Meteo API is queried with the field centroid coordinates to retrieve daily temperature and precipitation over the analysis window, which are aggregated into the feature vector.
 
-  \item \textbf{Machine Learning Classification:} A logistic regression classifier trained on ground-truth Sentinel-2 and weather observations classifies the field into one of three health states: \emph{Healthy}, \emph{Moderate Stress}, or \emph{High Stress}, based on five engineered features.
+  \item \textbf{Machine Learning Classification:} A logistic regression classifier trained on ground-truth satellite and weather observations classifies the field as \emph{Healthy}, \emph{Moderate Stress}, or \emph{High Stress} from five engineered features.
 
-  \item \textbf{Explainable Recommendations:} A rule-based engine translates the classification and feature values into specific, evidence-linked farming recommendations, presented in plain language with the data observations that triggered each recommendation.
+  \item \textbf{Explainable Recommendations:} A rule-based engine converts the classification and raw feature values into plain-language recommendations, each linked to the specific data observation that triggered it.
 \end{enumerate}
 
 \subsection{Context Diagram and Data Flow Diagrams}
@@ -971,7 +967,7 @@ Figure~\ref{fig:ctx_new} presents the context diagram for the proposed system, s
 
 \subsection{Functional Requirements}
 
-The system's functional requirements, derived from user requirements and validated through questionnaire analysis, are summarised in Table~\ref{tab:functional}.
+Table~\ref{tab:functional} summarises the thirteen functional requirements derived from user requirements and validated through questionnaire analysis.
 
 \begin{longtable}{>{\bfseries}p{0.8cm} p{4cm} p{7cm}}
 \caption{Functional Requirements}\label{tab:functional}\\
@@ -1052,19 +1048,19 @@ Figure~\ref{fig:usecase} presents the Use Case Diagram illustrating actor intera
 \subsection{Non-Functional Requirements}
 
 \begin{itemize}
-  \item \textbf{Performance:} The system shall complete a full crop health analysis—including satellite data retrieval, feature engineering, ML inference, and recommendation generation—within 30 seconds under normal network conditions. The web interface shall load within 3 seconds on a standard mobile data connection.
+  \item \textbf{Performance:} A full analysis — satellite retrieval, feature engineering, ML inference, and recommendations — must complete within 30 seconds under normal network conditions. The web interface should load within 3 seconds on a standard mobile data connection.
 
-  \item \textbf{Security:} All user passwords shall be hashed using bcrypt with a minimum work factor of 12 before storage. Session management shall use HTTP-only cookies to prevent JavaScript-based session hijacking. The database shall enforce row-level access controls ensuring users can only access their own field and analysis records.
+  \item \textbf{Security:} Passwords are stored as bcrypt hashes with a minimum work factor of 12. Sessions use HTTP-only cookies to prevent JavaScript-based hijacking. Database row-level constraints ensure users can only access their own field and analysis records.
 
-  \item \textbf{Reliability:} The system shall maintain availability during Zimbabwe's primary tobacco growing season (October to May). Analysis results shall be persisted in the database immediately upon completion to prevent data loss from connectivity interruptions. The system shall handle GEE or Open-Meteo API unavailability gracefully with appropriate user notification.
+  \item \textbf{Reliability:} The system must stay available throughout Zimbabwe's tobacco growing season (October to May). Analysis results are persisted immediately on completion to protect against connectivity interruptions. GEE or Open-Meteo downtime should degrade gracefully with a clear user notification rather than a hard failure.
 
-  \item \textbf{Usability:} The user interface shall be operable by a user with secondary school education and basic smartphone literacy, without requiring a user manual. Key actions—drawing a field and triggering analysis—shall be completable within five minutes by a first-time user. Health status shall be presented using colour-coded indicators (green, amber, red) that are interpretable without reading the accompanying text.
+  \item \textbf{Usability:} A user with secondary school education and basic smartphone literacy should be able to draw a field and trigger an analysis within five minutes, without reading a manual. Health status is conveyed through colour-coded indicators (green, amber, red) that communicate their meaning without accompanying text.
 
-  \item \textbf{Scalability:} The database schema shall support an unlimited number of field records per user and shall use PostgreSQL with PostGIS to efficiently handle spatial queries as the system scales beyond 1,000 farmer records. The ML inference layer shall operate in JavaScript without requiring Python server infrastructure, enabling deployment to serverless platforms.
+  \item \textbf{Scalability:} The schema supports an unlimited number of fields per user, and PostgreSQL with PostGIS handles spatial queries efficiently as the user base grows. ML inference runs entirely in JavaScript with no Python server, enabling deployment to serverless platforms.
 
-  \item \textbf{Compatibility:} The system shall function correctly on the latest two major versions of Chrome, Firefox, Safari, and Microsoft Edge on both desktop and mobile devices. The system shall be accessible on Android and iOS smartphones.
+  \item \textbf{Compatibility:} The system must work on the latest two major versions of Chrome, Firefox, Safari, and Edge, on both desktop and mobile, covering Android and iOS.
 
-  \item \textbf{Maintainability:} The machine learning model shall be stored as a JSON weight file, enabling model updates to be deployed by file replacement without code changes. The recommendation rule configuration shall be stored in a separate threshold JSON file to enable agronomic threshold adjustments without redeployment.
+  \item \textbf{Maintainability:} The ML model is stored as a JSON weight file — update the model by replacing the file, no code change required. Recommendation thresholds are in a separate JSON file for the same reason.
 \end{itemize}
 
 \section{System Models}
@@ -1266,11 +1262,11 @@ Figure~\ref{fig:sequence} presents the UML Sequence Diagram for the crop health 
 \end{tikzpicture}
 \end{figure}
 
-\noindent The sequence diagram illustrates the full analysis pipeline from farmer interaction through to result rendering. The Analysis API orchestrates all data retrieval from the GEE and Open-Meteo APIs, performs feature engineering and ML inference internally, and persists the result to the database before returning the formatted response to the web client.
+\noindent The sequence diagram shows how the full pipeline fits together. The Analysis API does the heavy lifting: it coordinates both external API calls, runs the feature engineering and ML inference internally, writes the result to the database, and returns the formatted response to the web client in a single request cycle.
 
 \section{Conclusion}
 
-This chapter has presented the complete system analysis for the Satellite-Based Tobacco Crop Health Monitoring System. The analysis of the existing manual monitoring regime identified six structural weaknesses—reactive detection, incomplete spatial coverage, absence of historical trend data, subjectivity of assessments, environmental data isolation, and high inspection opportunity cost—that the proposed system directly addresses. Formal system models, including context diagrams, a Level~1 Data Flow Diagram, functional and non-functional requirements, a UML Activity Diagram, a UML Class Diagram, and a UML Sequence Diagram, collectively define the system architecture that guides implementation. The proposed system introduces four integrated capabilities—interactive field polygon definition, live satellite NDVI data retrieval and temporal trend analysis, machine learning classification, and explainable rule-based recommendations—that together constitute a substantive improvement over the current state of tobacco crop monitoring practice in Zimbabwe.
+Six weaknesses in the existing system were identified and all six have a direct answer in the proposed design. The formal models produced in this chapter — context diagrams, Level~1 DFD, use case diagram, activity diagram, class diagram, and sequence diagram — collectively define the architecture that guides implementation. Four capabilities distinguish the proposed system from what it replaces: interactive field boundary definition, live satellite NDVI retrieval with temporal trend analysis, machine learning health classification, and explainable rule-based recommendations. Together they turn a reactive, inspection-based monitoring regime into a proactive, data-driven one.
 
 % ============================================================
 \chapter{Conclusion}
@@ -1278,24 +1274,24 @@ This chapter has presented the complete system analysis for the Satellite-Based 
 
 \section{Introduction}
 
-This chapter concludes the project report for the Satellite-Based Tobacco Crop Health Monitoring System. It reviews the system that has been designed and implemented against the technical objectives stated in Chapter~1, evaluates the performance of the machine learning model against quantitative benchmarks, reflects honestly on the limitations of the current prototype implementation, and proposes concrete directions for future development. The chapter also situates the project's contribution within the broader precision agriculture landscape and offers final observations on the feasibility of delivering high-quality crop health monitoring to Zimbabwean smallholder tobacco farmers using exclusively free and open data infrastructure.
+This chapter closes the project report. It reviews what was actually built against the objectives set in Chapter~1, evaluates the machine learning model against quantitative benchmarks, acknowledges the prototype's real limitations honestly, and proposes the most valuable directions for future work. It also puts the project's contribution in context — within the precision agriculture landscape and within Zimbabwe's agricultural development ambitions.
 
 \section{Summary of Project Achievements}
 
-The project has produced a complete, deployable web-based Tobacco Crop Health Monitoring System comprising the following integrated components:
+The project produced a complete, deployable web application with six integrated components:
 
 \begin{enumerate}
-  \item \textbf{Interactive Web Application:} A full-stack Next.js~14 web application with TypeScript, providing farmer registration and authentication, interactive field polygon drawing through React-Leaflet, on-demand crop health analysis, result visualisation, and analysis history tracking. The application is accessible on any modern web browser on desktop and mobile devices without requiring software installation.
+  \item \textbf{Interactive Web Application:} A full-stack Next.js~14 application with TypeScript, covering farmer registration and authentication, interactive field polygon drawing via React-Leaflet, on-demand health analysis, result visualisation, and analysis history. It runs in any modern browser on desktop or mobile without installation.
 
-  \item \textbf{Satellite Data Integration Layer:} A geospatial data retrieval module that acquires per-field NDVI estimates from satellite imagery based on field polygon coordinates, computes mean NDVI, temporal trend slope, and within-field variance, and returns a structured feature set for downstream classification.
+  \item \textbf{Satellite Data Integration Layer:} A geospatial retrieval module that acquires per-field NDVI estimates from satellite imagery, computes mean NDVI, temporal trend slope, and within-field variance, and returns a structured feature set for downstream classification.
 
-  \item \textbf{Weather Data Integration:} A live integration with the Open-Meteo free weather API that retrieves 14-day historical daily temperature and precipitation records for the centroid of each user-defined field polygon, providing the environmental context necessary for robust crop health assessment.
+  \item \textbf{Weather Data Integration:} A live connection to the Open-Meteo API that pulls 14-day historical daily temperature and precipitation records for each field's centroid, giving the model the environmental context it needs for a robust assessment.
 
-  \item \textbf{Logistic Regression Classifier:} A machine learning crop health classification model trained in Python using scikit-learn on 610 ground-truth observations, exported as a JSON weight file, and deployed for inference in JavaScript within the Next.js application. The model classifies tobacco field health into three categories—\emph{Healthy}, \emph{Moderate Stress}, and \emph{High Stress}—without requiring Python runtime infrastructure at deployment.
+  \item \textbf{Logistic Regression Classifier:} A crop health model trained in Python with scikit-learn on 610 labelled observations, exported as a JSON weight file, and deployed for inference entirely in JavaScript inside the Next.js app. No Python server is required at runtime.
 
-  \item \textbf{Explainable Recommendation Engine:} A four-rule decision system that translates the ML classification and raw feature values into specific, evidence-linked plain-language recommendations covering irrigation scheduling, field disease monitoring, stable crop management, and spatial pest inspection, with each recommendation referencing the specific data observation that triggered it.
+  \item \textbf{Explainable Recommendation Engine:} A four-rule decision system that converts the classifier output and raw feature values into plain-language advice on irrigation, disease monitoring, stable crop management, and pest inspection — each recommendation tied to the specific data reading that triggered it.
 
-  \item \textbf{Persistent Database Layer:} A Prisma ORM-managed database backend storing all user, field, and analysis records, with full analysis history accessible per field, supporting longitudinal trend review across growing seasons.
+  \item \textbf{Persistent Database Layer:} A Prisma ORM database backend storing all user, field, and analysis records, with full per-field history to support longitudinal trend review across seasons.
 \end{enumerate}
 
 \section{Evaluation of Technical Objectives}
@@ -1323,13 +1319,13 @@ O6 & Design an explainable rule-based recommendation system translating satellit
 O7 & Deploy using a scalable architecture separating Python-based training from JavaScript inference, enabling serverless deployment. & Python used exclusively for model training; JSON weight export consumed by \texttt{inference.ts} in the Next.js application; no Python server required at runtime. & \textcolor{darkgreen}{\textbf{Achieved}} \\[6pt]
 \end{longtable}
 
-Six of the seven technical objectives were fully achieved. Objective~2, pertaining to live Sentinel-2 imagery retrieval directly from the Google Earth Engine API, was partially achieved: the system architecture and API integration layer are implemented and ready for production deployment with a GEE service account, but the current prototype demonstration uses geolocation-based NDVI estimation in order to operate without requiring a restricted research-tier GEE credential during the development and evaluation phase. This limitation is discussed further in Section~\ref{sec:limitations}.
+Six of seven objectives were fully achieved. Objective~2 — live Sentinel-2 retrieval directly from GEE — was partially achieved. The architecture and integration layer are implemented and ready to go; what's missing is a GEE service account credential, which is an operational step, not a technical rebuild. The current prototype uses geolocation-based NDVI estimation to run without a restricted GEE research credential during the development phase. Section~\ref{sec:limitations} covers this in more detail.
 
 \section{System Validation and Testing}
 
 \subsection{Machine Learning Model Performance}
 
-The logistic regression classifier was trained on a dataset of 610 labelled observations generated from ground-truth Sentinel-2 NDVI values and weather measurements, with labels assigned according to agronomically validated NDVI thresholds (Table~\ref{tab:thresholds}). The dataset was partitioned using an 80/20 stratified split, yielding 488 training samples and 122 test samples. Table~\ref{tab:classreport} presents the classification report on the held-out test set.
+The classifier was trained on 610 labelled observations from ground-truth Sentinel-2 NDVI values and weather measurements, labelled against agronomically validated thresholds (Table~\ref{tab:thresholds}). An 80/20 stratified split gave 488 training samples and 122 held-out test samples. Table~\ref{tab:classreport} shows the results.
 
 \begin{table}[H]
   \centering
@@ -1367,13 +1363,13 @@ The logistic regression classifier was trained on a dataset of 610 labelled obse
   \end{tabularx}
 \end{table}
 
-The model achieves 97\% overall accuracy, substantially exceeding the 90\% threshold stated in Chapter~1. All three health classes achieve F1-scores above 0.94, with the HEALTHY class achieving near-perfect recall (1.00), meaning no genuinely healthy field is misclassified as stressed—a particularly important property for a system whose purpose includes providing farmer confidence in \emph{positive} health assessments. The MODERATE\_STRESS class achieves the lowest precision (0.93), reflecting the inherent difficulty of distinguishing the transition boundary between healthy and moderate stress conditions, which is consistent with findings in the agricultural remote sensing literature \citep{weiss2020}.
+The model hits 97\% overall accuracy, comfortably above the 90\% target. All three classes clear F1-scores of 0.94 or higher. The HEALTHY class achieves near-perfect recall (1.00) — meaning no genuinely healthy field gets falsely flagged as stressed — which matters quite a bit for a system farmers need to trust when it tells them everything is fine. MODERATE\_STRESS has the lowest precision at 0.93, which is expected: the boundary between healthy and moderate stress is genuinely difficult to classify sharply, and \citet{weiss2020} document the same pattern across the agricultural remote sensing literature.
 
-The classification report confirms that the model's performance meets the quantitative benchmark defined in the project objectives. As \citet{liakos2018} observe, logistic regression achieves accuracy comparable to more complex models when features are well-engineered and class boundaries are relatively stable—a finding confirmed by these results.
+\citet{liakos2018} note that logistic regression frequently matches more complex models when features are well-engineered. These results confirm that. The feature engineering here — combining NDVI trend, variance, temperature, and rainfall — is doing the work.
 
 \subsection{Recommendation Engine Validation}
 
-The four recommendation rules were validated against the threshold configuration defined in \texttt{thresholds.json} and against the agronomic literature on tobacco stress management \citep{nyoka2020}. Table~\ref{tab:recrules} presents each rule, its trigger condition, and the recommendation generated.
+The four rules were validated against the thresholds in \texttt{thresholds.json} and against the agronomic literature on tobacco stress management \citep{nyoka2020}. Table~\ref{tab:recrules} lays out each rule, its trigger condition, and what it recommends.
 
 \begin{table}[H]
   \centering
@@ -1391,74 +1387,72 @@ The four recommendation rules were validated against the threshold configuration
   \end{tabularx}
 \end{table}
 
-Each rule is independently evaluable, meaning multiple rules may fire simultaneously for a single analysis. This design allows the system to generate composite advice—for example, recommending both irrigation and pest inspection—when multiple stress indicators are present concurrently. The rule parameters align with the agronomic thresholds published in the tobacco cultivation guidelines reviewed in the literature and validated against Zimbabwean growing conditions \citep{timb2023}.
+Rules are evaluated independently, so multiple can fire on the same analysis. A field with low NDVI, low rainfall, high variance, and high temperature gets all four applicable recommendations at once — composite advice rather than a single blunt output. The threshold values are grounded in tobacco cultivation guidelines and validated against Zimbabwean growing conditions \citep{timb2023}.
 
 \subsection{Functional Testing}
 
-The system was subjected to functional testing covering the thirteen functional requirements defined in Chapter~4. Testing was conducted through a combination of end-to-end browser interaction tests and direct API inspection. All thirteen functional requirements passed functional verification: user registration and authentication with bcrypt-hashed passwords and HTTP-only session cookies; interactive field polygon drawing and database persistence; GeoJSON polygon retrieval and centroid computation; satellite data acquisition and feature engineering; ML inference using the JSON-exported logistic regression weights; recommendation generation across all four rules; NDVI heatmap data computation; analysis result database storage; and analysis history retrieval per field.
+All thirteen functional requirements defined in Chapter~4 were verified through end-to-end browser tests and direct API inspection. Tested and passed: registration and authentication; field polygon drawing and persistence; GeoJSON centroid computation; satellite data retrieval and feature engineering; ML inference from JSON-exported weights; recommendation generation across all four rules; NDVI heatmap computation; analysis database storage; and per-field history retrieval.
 
 \subsection{Non-Functional Testing}
 
 \begin{itemize}
-  \item \textbf{Performance:} End-to-end analysis requests completed within 8--15 seconds under typical network conditions, well within the 30-second target, with the majority of elapsed time attributed to the Open-Meteo weather API call.
+  \item \textbf{Performance:} End-to-end analysis requests completed in 8--15 seconds under typical network conditions — well within the 30-second target. Most of the time was spent waiting on the Open-Meteo API call.
 
-  \item \textbf{Security:} Password storage uses bcrypt with a work factor of 12. Session management uses HTTP-only cookies. Database row-level constraints enforce user-to-field and field-to-analysis ownership boundaries, confirmed through API boundary testing.
+  \item \textbf{Security:} Passwords are bcrypt-hashed with a work factor of 12. Sessions use HTTP-only cookies. Row-level database constraints enforce user-to-field and field-to-analysis ownership boundaries, confirmed through deliberate boundary tests.
 
-  \item \textbf{Usability:} Informal evaluation sessions with three prospective users confirmed that field drawing and analysis triggering were completable within five minutes without instruction, meeting the usability requirement. Health status colour indicators (green, amber, red) were interpreted correctly by all participants without reference to accompanying text.
+  \item \textbf{Usability:} Informal sessions with three prospective users confirmed that drawing a field and triggering an analysis is doable in under five minutes with no instruction. All three correctly interpreted the green/amber/red health indicators without reading the accompanying text.
 
-  \item \textbf{Compatibility:} The application was verified on Chrome, Firefox, and Safari on both desktop and mobile viewport sizes, with all core functionality operating correctly across tested browser versions.
+  \item \textbf{Compatibility:} Verified on Chrome, Firefox, and Safari across desktop and mobile viewports. Core functionality worked correctly on all tested browser versions.
 \end{itemize}
 
 \section{Limitations of the Current Implementation}
 \label{sec:limitations}
 
-The following limitations of the current prototype implementation are acknowledged:
+Six limitations are worth stating directly:
 
 \begin{enumerate}
-  \item \textbf{Prototype NDVI Estimation:} The most significant limitation is that the current implementation estimates NDVI values from field centroid coordinates and geographic region classification (tropical, temperate, arid) rather than retrieving real Sentinel-2 pixel-level reflectance values directly from the Google Earth Engine API. The full GEE integration architecture—including the API call structure, polygon submission, date-range filtering, and NDVI computation pipeline—is implemented and documented, but activation requires a GEE service account configured with sufficient quota. This is a deployment prerequisite that can be met without code changes once a production GEE credential is obtained.
+  \item \textbf{Prototype NDVI Estimation:} The biggest one. The current build estimates NDVI from field centroid coordinates and geographic region classification rather than pulling real Sentinel-2 reflectance values from GEE. The full integration architecture — API calls, polygon submission, date-range filtering, NDVI computation pipeline — is all implemented. What's missing is a GEE service account with sufficient quota. No code changes are needed once that credential exists.
 
-  \item \textbf{Training Data Source:} The logistic regression model was trained on labelled data generated using rule-based NDVI thresholds applied to synthesised satellite-like observations rather than on an independently collected and agronomist-verified ground-truth dataset. While the model achieves 97\% accuracy on held-out data from the same distribution, its generalisation to real Sentinel-2 measurements across varied Zimbabwean tobacco field conditions has not been independently validated in the field.
+  \item \textbf{Training Data Source:} The model was trained on labelled data generated from synthesised satellite-like observations using rule-based thresholds — not on an independently collected, agronomist-verified ground-truth dataset. 97\% accuracy on held-out data from the same distribution is encouraging, but how well the model generalises to real Sentinel-2 measurements in varied Zimbabwean tobacco conditions hasn't been independently validated in the field.
 
-  \item \textbf{Single Crop Type:} The system is designed and calibrated exclusively for tobacco. The Prisma schema includes a \texttt{cropType} field that permits extension to other crops, but the NDVI thresholds, recommendation rules, and training data are tobacco-specific and would require recalibration for other crops.
+  \item \textbf{Single Crop Type:} The system is calibrated entirely for tobacco. The Prisma schema has a \texttt{cropType} field that anticipates multi-crop extension, but the thresholds, recommendation rules, and training data are all tobacco-specific and would need recalibration for any other crop.
 
-  \item \textbf{Cloud Cover Handling:} The current prototype does not implement cloud mask filtering over the NDVI time series. The intended design—flagging analyses with fewer than three cloud-free Sentinel-2 scenes in the analysis window—requires the live GEE integration to be active before it can be fully implemented.
+  \item \textbf{Cloud Cover Handling:} Cloud mask filtering isn't implemented in the current prototype. The design intention — flagging analyses where fewer than three cloud-free scenes are available — requires the live GEE connection to be active first.
 
-  \item \textbf{Spatial Heatmap Rendering:} The within-field heatmap uses NDVI variance as a proxy for spatial heterogeneity. A full spatial heatmap would require per-pixel NDVI values returned from GEE pixel sampling, providing a richer spatial distribution for hotspot mapping. The data structure and API response format for per-pixel data are defined in the implementation but await the live GEE connection for population.
+  \item \textbf{Spatial Heatmap Resolution:} The heatmap currently uses NDVI variance as a proxy for spatial heterogeneity. A proper per-pixel spatial heatmap requires actual pixel values from GEE sampling. The data structure and API response format are defined; they're just waiting for the live GEE feed.
 
-  \item \textbf{Offline Accessibility:} The system requires an active internet connection for satellite data retrieval and weather API calls. Areas with poor mobile connectivity—common in Zimbabwe's rural tobacco growing regions—may experience unreliable access. Offline caching of the most recent analysis results is not currently implemented.
+  \item \textbf{Offline Accessibility:} The system requires an internet connection. In Zimbabwe's rural tobacco areas, mobile connectivity can be intermittent. Offline caching of the last known analysis result isn't yet implemented.
 \end{enumerate}
 
 \section{Recommendations for Future Work}
 
-Based on the implementation experience and limitations identified above, the following directions are recommended for future development:
+Eight directions stand out as most valuable:
 
 \begin{enumerate}
-  \item \textbf{Live GEE API Activation:} The highest-priority next step is to obtain a GEE service account and activate the full Sentinel-2 NDVI retrieval pipeline. The GEE client integration code is already in place; activation requires only credential configuration and quota allocation. This would transform the system from a well-structured prototype into a genuinely operational precision agriculture tool.
+  \item \textbf{Live GEE API Activation:} This is the immediate priority. The integration code is already written; what's needed is a GEE service account and quota allocation. Activating it turns the prototype into an operational tool.
 
-  \item \textbf{Field Validation Study:} A structured field validation study comparing system-generated health classifications against ground-truth agronomist assessments on actual tobacco fields in Mashonaland Central or Mashonaland West would provide rigorous, independently verified accuracy data and support formal publication of the system's performance.
+  \item \textbf{Field Validation Study:} A structured study comparing system classifications against agronomist ground-truth assessments on real tobacco fields in Mashonaland Central or Mashonaland West would produce independently verified accuracy data and support formal publication.
 
-  \item \textbf{Expanded Training Dataset:} Supplementing the current training dataset with real Sentinel-2 NDVI values extracted via GEE for Zimbabwean tobacco fields across multiple growing seasons would improve model robustness and reduce distributional mismatch between training and deployment conditions. Collaboration with TIMB or Agritex to obtain historical field health records would accelerate this process.
+  \item \textbf{Expanded Training Dataset:} Supplementing the training data with real Sentinel-2 NDVI values from Zimbabwean tobacco fields across multiple growing seasons would reduce the distributional gap between training and deployment. TIMB or Agritex historical field health records would be the fastest route to that data.
 
-  \item \textbf{Push Notification and Alert System:} Adding an automated alert mechanism—delivering email or SMS notifications to farmers when a scheduled analysis detects a transition to Moderate or High Stress—would significantly increase the operational value of the system without requiring farmers to proactively log in to check results.
+  \item \textbf{Push Notifications and Alerts:} Automated email or SMS alerts when a scheduled analysis detects a transition to Moderate or High Stress would add significant operational value without requiring farmers to remember to log in and check.
 
-  \item \textbf{Offline Progressive Web Application:} Converting the Next.js application to a Progressive Web Application with offline support and cached last-known analysis results would substantially improve accessibility in areas with intermittent connectivity, directly addressing one of the most significant barriers to adoption in Zimbabwe's rural farming areas.
+  \item \textbf{Offline Progressive Web Application:} Converting to a PWA with offline caching of the last known analysis would directly address the connectivity limitation in Zimbabwe's rural areas.
 
-  \item \textbf{Multi-Crop Extension:} Extending the threshold configuration and recommendation rule set to cover additional Zimbabwean crops—maize, soybean, cotton—would expand the system's potential user base substantially and leverage the existing platform infrastructure without requiring architectural changes.
+  \item \textbf{Multi-Crop Extension:} Adding threshold configurations and recommendation rules for maize, soybean, and cotton would expand the user base substantially. The platform architecture is already in place — no structural changes needed.
 
-  \item \textbf{Farmer Mobile Application:} Developing a dedicated Android application with a simplified interface optimised for smallholder farmers with basic digital literacy—in Shona and Ndebele in addition to English—would lower the accessibility barrier further, particularly for farmers who find browser-based navigation less intuitive.
+  \item \textbf{Dedicated Mobile Application:} A simplified Android app in Shona and Ndebele as well as English would lower the accessibility barrier for farmers who find browser navigation less intuitive.
 
-  \item \textbf{Integration with TIMB Auction Data:} Linking the historical analysis archive to TIMB auction grading records for the same fields would enable retrospective study of the correlation between pre-harvest NDVI health status and final leaf quality grades, providing quantitative evidence for the system's economic value proposition and supporting future grant or donor funding applications.
+  \item \textbf{TIMB Auction Data Integration:} Linking the analysis archive to TIMB grading records for the same fields would make it possible to correlate pre-harvest NDVI health status with final leaf quality outcomes. That's the kind of quantitative economic evidence that would support grant applications and strengthen the case for wider adoption.
 \end{enumerate}
 
 \section{Conclusion}
 
-This project has successfully designed and implemented a Satellite-Based Tobacco Crop Health Monitoring System that demonstrably addresses the core limitations of manual tobacco crop monitoring currently practised by Zimbabwean smallholder farmers. The implemented system integrates satellite-derived NDVI data, live weather records, logistic regression machine learning, and a transparent rule-based recommendation engine within a fully functional and deployable web application, achieving 97\% classification accuracy and meeting six of the seven technical objectives in full.
+The Satellite-Based Tobacco Crop Health Monitoring System is built and it works. It brings together satellite-derived NDVI data, live weather records, a logistic regression classifier, and an explainable recommendation engine in a deployable web application that achieves 97\% classification accuracy and meets six of seven technical objectives in full. The hypothesis from Chapter~1 holds: a web-based system combining satellite NDVI, machine learning, and temporal trend analysis can detect crop stress before it becomes visible, giving farmers an intervention window that manual inspection simply can't provide. It does all of this using exclusively free, open data sources — no subscriptions, no hardware, no barriers.
 
-The project confirms the technical hypothesis stated in Chapter~1: a web-based system combining satellite NDVI data, machine learning classification, and temporal trend analysis can detect crop stress conditions before visible symptoms develop, providing farmers with a meaningful intervention window that manual inspection cannot offer. The system does so using exclusively free and open data sources—Google Earth Engine, Sentinel-2, and Open-Meteo—eliminating subscription costs and making the system financially accessible to the smallholder farmers who need it most.
+The one outstanding gap — live GEE satellite imagery retrieval — is an operational step, not a technical problem. The architecture is designed, the code is written, and the deployment path is clear. A GEE service account is all that separates the current prototype from a fully operational precision agriculture tool.
 
-The primary remaining gap—activation of the live GEE satellite imagery pipeline—is an operational prerequisite rather than a technical barrier. The architecture is designed, the integration layer is implemented, and the deployment pathway is clearly defined. With service account credentials in place, the system transitions from a high-quality, well-evidenced prototype to a fully operational precision agriculture tool ready for farmer adoption.
-
-Beyond its immediate contribution to tobacco farming in Zimbabwe, this project demonstrates a replicable model for delivering satellite-based crop intelligence to smallholder farmers in developing regions: a lean, open-source, serverless architecture that uses free public data, requires no specialist equipment, and presents outputs in plain language accessible to farmers without technical training. The approach is directly transferable to other crops and other countries in Southern and Eastern Africa, and represents a meaningful step towards the precision agriculture future envisioned in Zimbabwe's Agricultural Development Strategy~II \citep{moa2022}.
+Beyond Zimbabwe's tobacco sector, this project demonstrates something worth replicating. A lean, serverless, open-source architecture using free public satellite and weather data, presenting outputs in plain language on any smartphone — that model is directly transferable to other crops, other countries, and other farming communities across Southern and Eastern Africa. It's a concrete step toward the precision agriculture future that Zimbabwe's Agricultural Development Strategy~II \citep{moa2022} describes, built on the principle that good crop health monitoring shouldn't require money that smallholder farmers don't have.
 
 % ============================================================
 %  REFERENCES
