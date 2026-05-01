@@ -2,7 +2,7 @@
 \contentsline {chapter}{Dedication}{iii}{chapter*.2}%
 \contentsline {chapter}{Acknowledgements}{iv}{chapter*.3}%
 \contentsline {chapter}{Abstract}{v}{chapter*.4}%
-\contentsline {chapter}{List of Acronyms}{x}{chapter*.5}%
+\contentsline {chapter}{List of Acronyms}{xi}{chapter*.5}%
 \contentsline {chapter}{\numberline {1}Introduction}{1}{chapter.1}%
 \contentsline {section}{\numberline {1.1}Introduction}{1}{section.1.1}%
 \contentsline {section}{\numberline {1.2}Motivation}{2}{section.1.2}%
@@ -65,22 +65,65 @@
 \contentsline {subsection}{\numberline {4.6.2}UML Class Diagram}{30}{subsection.4.6.2}%
 \contentsline {subsection}{\numberline {4.6.3}UML Sequence Diagram}{32}{subsection.4.6.3}%
 \contentsline {section}{\numberline {4.7}Conclusion}{32}{section.4.7}%
-\contentsline {chapter}{\numberline {5}Conclusion}{34}{chapter.5}%
+\contentsline {chapter}{\numberline {5}System Design}{34}{chapter.5}%
 \contentsline {section}{\numberline {5.1}Introduction}{34}{section.5.1}%
-\contentsline {section}{\numberline {5.2}Summary of Project Achievements}{34}{section.5.2}%
-\contentsline {section}{\numberline {5.3}Evaluation of Technical Objectives}{35}{section.5.3}%
-\contentsline {section}{\numberline {5.4}System Validation and Testing}{36}{section.5.4}%
-\contentsline {subsection}{\numberline {5.4.1}Machine Learning Model Performance}{36}{subsection.5.4.1}%
-\contentsline {subsection}{\numberline {5.4.2}Recommendation Engine Validation}{37}{subsection.5.4.2}%
-\contentsline {subsection}{\numberline {5.4.3}Functional Testing}{38}{subsection.5.4.3}%
-\contentsline {subsection}{\numberline {5.4.4}Non-Functional Testing}{38}{subsection.5.4.4}%
-\contentsline {section}{\numberline {5.5}Limitations of the Current Implementation}{39}{section.5.5}%
-\contentsline {section}{\numberline {5.6}Recommendations for Future Work}{40}{section.5.6}%
-\contentsline {section}{\numberline {5.7}Conclusion}{41}{section.5.7}%
-\contentsline {chapter}{References}{42}{section.5.7}%
-\contentsline {chapter}{\numberline {A}Python Model Training Script}{45}{appendix.A}%
-\contentsline {chapter}{\numberline {B}Model Export Script}{48}{appendix.B}%
-\contentsline {chapter}{\numberline {C}JavaScript Inference Module}{50}{appendix.C}%
-\contentsline {chapter}{\numberline {D}Recommendation Engine Source}{52}{appendix.D}%
-\contentsline {chapter}{\numberline {E}Prisma Database Schema}{54}{appendix.E}%
-\contentsline {chapter}{\numberline {F}Threshold and Model Configuration Files}{57}{appendix.F}%
+\contentsline {section}{\numberline {5.2}System Design}{34}{section.5.2}%
+\contentsline {subsection}{\numberline {5.2.1}How will the System Work?}{36}{subsection.5.2.1}%
+\contentsline {section}{\numberline {5.3}Solution Architecture}{37}{section.5.3}%
+\contentsline {section}{\numberline {5.4}Database Modelling}{38}{section.5.4}%
+\contentsline {subsection}{\numberline {5.4.1}E-R Diagram}{38}{subsection.5.4.1}%
+\contentsline {subsection}{\numberline {5.4.2}Data Dictionary}{39}{subsection.5.4.2}%
+\contentsline {subsection}{\numberline {5.4.3}Database Schema}{41}{subsection.5.4.3}%
+\contentsline {section}{\numberline {5.5}Algorithm Design}{42}{section.5.5}%
+\contentsline {subsection}{\numberline {5.5.1}Inputs to the Algorithm}{42}{subsection.5.5.1}%
+\contentsline {subsection}{\numberline {5.5.2}Pre-processing and Validation}{43}{subsection.5.5.2}%
+\contentsline {subsection}{\numberline {5.5.3}Feature Engineering}{43}{subsection.5.5.3}%
+\contentsline {subsection}{\numberline {5.5.4}Model Selection and Responsibilities}{44}{subsection.5.5.4}%
+\contentsline {subsection}{\numberline {5.5.5}Inference and Post-processing Logic}{44}{subsection.5.5.5}%
+\contentsline {subsection}{\numberline {5.5.6}Algorithm Pseudocode}{45}{subsection.5.5.6}%
+\contentsline {section}{\numberline {5.6}Interface Design}{46}{section.5.6}%
+\contentsline {subsection}{\numberline {5.6.1}Login and Registration Interface}{46}{subsection.5.6.1}%
+\contentsline {subsection}{\numberline {5.6.2}Dashboard Interface}{47}{subsection.5.6.2}%
+\contentsline {subsection}{\numberline {5.6.3}Create Field Interface}{47}{subsection.5.6.3}%
+\contentsline {subsection}{\numberline {5.6.4}Analysis Results Interface}{48}{subsection.5.6.4}%
+\contentsline {section}{\numberline {5.7}Conclusion}{49}{section.5.7}%
+\contentsline {chapter}{\numberline {6}System Implementation}{50}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Introduction}{50}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Development Environment and Tools}{50}{section.6.2}%
+\contentsline {section}{\numberline {6.3}Application Structure}{52}{section.6.3}%
+\contentsline {section}{\numberline {6.4}Frontend Implementation}{52}{section.6.4}%
+\contentsline {subsection}{\numberline {6.4.1}Interactive Map Component}{52}{subsection.6.4.1}%
+\contentsline {subsection}{\numberline {6.4.2}Analysis Results Page}{53}{subsection.6.4.2}%
+\contentsline {section}{\numberline {6.5}Backend API Implementation}{53}{section.6.5}%
+\contentsline {subsection}{\numberline {6.5.1}Authentication Routes}{53}{subsection.6.5.1}%
+\contentsline {subsection}{\numberline {6.5.2}Field Management Routes}{54}{subsection.6.5.2}%
+\contentsline {subsection}{\numberline {6.5.3}Analysis Route}{54}{subsection.6.5.3}%
+\contentsline {section}{\numberline {6.6}Google Earth Engine Integration}{55}{section.6.6}%
+\contentsline {subsection}{\numberline {6.6.1}Authentication and Service Account}{55}{subsection.6.6.1}%
+\contentsline {subsection}{\numberline {6.6.2}NDVI Retrieval Pipeline}{55}{subsection.6.6.2}%
+\contentsline {subsection}{\numberline {6.6.3}Heatmap Data Generation}{55}{subsection.6.6.3}%
+\contentsline {section}{\numberline {6.7}Machine Learning Implementation}{56}{section.6.7}%
+\contentsline {subsection}{\numberline {6.7.1}Training Pipeline}{56}{subsection.6.7.1}%
+\contentsline {subsection}{\numberline {6.7.2}Model Export and JavaScript Inference}{56}{subsection.6.7.2}%
+\contentsline {subsection}{\numberline {6.7.3}Recommendation Engine}{57}{subsection.6.7.3}%
+\contentsline {section}{\numberline {6.8}Database Implementation}{57}{section.6.8}%
+\contentsline {section}{\numberline {6.9}Conclusion}{57}{section.6.9}%
+\contentsline {chapter}{\numberline {7}Testing, Evaluation and Conclusion}{58}{chapter.7}%
+\contentsline {section}{\numberline {7.1}Introduction}{58}{section.7.1}%
+\contentsline {section}{\numberline {7.2}Summary of Project Achievements}{58}{section.7.2}%
+\contentsline {section}{\numberline {7.3}Evaluation of Technical Objectives}{59}{section.7.3}%
+\contentsline {section}{\numberline {7.4}System Validation and Testing}{60}{section.7.4}%
+\contentsline {subsection}{\numberline {7.4.1}Machine Learning Model Performance}{60}{subsection.7.4.1}%
+\contentsline {subsection}{\numberline {7.4.2}Recommendation Engine Validation}{61}{subsection.7.4.2}%
+\contentsline {subsection}{\numberline {7.4.3}Functional Testing}{62}{subsection.7.4.3}%
+\contentsline {subsection}{\numberline {7.4.4}Non-Functional Testing}{62}{subsection.7.4.4}%
+\contentsline {section}{\numberline {7.5}Limitations of the Current Implementation}{63}{section.7.5}%
+\contentsline {section}{\numberline {7.6}Recommendations for Future Work}{64}{section.7.6}%
+\contentsline {section}{\numberline {7.7}Conclusion}{65}{section.7.7}%
+\contentsline {chapter}{References}{66}{section.7.7}%
+\contentsline {chapter}{\numberline {A}Python Model Training Script}{69}{appendix.A}%
+\contentsline {chapter}{\numberline {B}Model Export Script}{72}{appendix.B}%
+\contentsline {chapter}{\numberline {C}JavaScript Inference Module}{74}{appendix.C}%
+\contentsline {chapter}{\numberline {D}Recommendation Engine Source}{76}{appendix.D}%
+\contentsline {chapter}{\numberline {E}Prisma Database Schema}{78}{appendix.E}%
+\contentsline {chapter}{\numberline {F}Threshold and Model Configuration Files}{81}{appendix.F}%
