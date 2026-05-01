@@ -1,0 +1,149 @@
+% ============================================================
+%  Prince Rupiya – H220536M – HIT 400 Project Document
+%  Satellite-Based Tobacco Crop Health Monitoring System
+%  Using Machine Learning and NDVI Analysis
+%  Harare Institute of Technology, 2025
+%  CHAPTER 7: Testing, Evaluation and Conclusion (Standalone)
+% ============================================================
+
+\documentclass[12pt,a4paper]{report}
+
+% ---- Page Layout ----
+\usepackage[top=1in,bottom=1in,left=1.25in,right=1in,headheight=14pt]{geometry}
+
+% ---- Fonts & Encoding ----
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{mathptmx}          % Times New Roman
+
+% ---- Line Spacing ----
+\usepackage{setspace}
+\onehalfspacing
+
+% ---- Citations (Harvard / Author-Year) ----
+\usepackage[round,authoryear,sort]{natbib}
+
+% ---- Graphics ----
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% ---- TikZ for Diagrams ----
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,shapes.misc,shapes.multipart,
+                arrows.meta,positioning,fit,
+                backgrounds,calc,decorations.pathreplacing}
+
+% ---- Tables ----
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{makecell}
+
+% ---- Lists ----
+\usepackage{enumitem}
+
+% ---- Colours ----
+\usepackage{xcolor}
+\definecolor{hitblue}{RGB}{0,70,127}
+\definecolor{lightgray}{RGB}{240,240,240}
+\definecolor{darkgreen}{RGB}{0,128,0}
+\definecolor{amber}{RGB}{255,191,0}
+\definecolor{firebrick}{RGB}{178,34,34}
+
+% ---- Maths ----
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% ---- Code Listings ----
+\usepackage{listings}
+\lstset{basicstyle=\small\ttfamily,
+        frame=single,
+        backgroundcolor=\color{lightgray},
+        breaklines=true}
+
+% ---- Headers / Footers ----
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\leftmark}
+\fancyhead[R]{\small Prince Rupiya | H220536M}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ---- Hyperlinks ----
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,
+            linkcolor=hitblue,
+            citecolor=hitblue,
+            urlcolor=hitblue}
+
+% ---- Chapter Titles ----
+\usepackage{titlesec}
+\titleformat{\chapter}[block]
+  {\normalfont\Large\bfseries\color{hitblue}}
+  {\chaptername\ \thechapter:}{0.5em}{}
+\titlespacing*{\chapter}{0pt}{20pt}{15pt}
+
+% ---- Table of Contents ----
+\usepackage{tocloft}
+\renewcommand{\cfttoctitlefont}{\Large\bfseries\color{hitblue}}
+\renewcommand{\cftloftitlefont}{\Large\bfseries\color{hitblue}}
+\renewcommand{\cftlottitlefont}{\Large\bfseries\color{hitblue}}
+
+% ---- Gantt Chart ----
+\usepackage{pgfgantt}
+
+% ---- Verbatim ----
+\usepackage{verbatim}
+
+% ============================================================
+%  Helper: diagram description box
+% ============================================================
+\usepackage{tcolorbox}
+\tcbuselibrary{skins}
+\newtcolorbox{diagrambox}[1]{
+  colback=lightgray,colframe=hitblue,
+  title={\textbf{Diagram Description — #1}},
+  fonttitle=\small\bfseries,
+  boxrule=0.8pt}
+
+% ============================================================
+\begin{document}
+% ============================================================
+
+\pagenumbering{arabic}
+\setcounter{chapter}{6}   % so \chapter{} renders as Chapter 7
+
+\input{ch7_content}
+
+% ============================================================
+%  REFERENCES
+% ============================================================
+\clearpage
+\addcontentsline{toc}{chapter}{References}
+\markboth{REFERENCES}{}
+
+\begin{thebibliography}{99}
+
+\bibitem[\protect\citeauthoryear{Liakos et al.}{Liakos et al.}{2018}]{liakos2018}
+Liakos, K.G., Busato, P., Moshou, D., Pearson, S. and Bochtis, D. (2018) `Machine learning in agriculture: a review', \textit{Sensors}, 18(8), p. 2674.
+
+\bibitem[\protect\citeauthoryear{Ministry of Lands, Agriculture, Fisheries, Water and Rural Development}{Ministry of Agriculture}{2022}]{moa2022}
+Ministry of Lands, Agriculture, Fisheries, Water and Rural Development (2022) \textit{Zimbabwe Agricultural Development Strategy II (2021--2025)}. Harare: Government of Zimbabwe.
+
+\bibitem[\protect\citeauthoryear{Nyoka, Dube and Masocha}{Nyoka et al.}{2020}]{nyoka2020}
+Nyoka, M., Dube, T. and Masocha, M. (2020) `Assessing the utility of remote sensing data in monitoring tobacco crop health in Zimbabwe', \textit{South African Geographical Journal}, 102(1), pp. 15--32.
+
+\bibitem[\protect\citeauthoryear{Tobacco Industry and Marketing Board}{TIMB}{2023}]{timb2023}
+Tobacco Industry and Marketing Board (2023) \textit{Annual Report 2022/2023}. Harare: TIMB.
+
+\bibitem[\protect\citeauthoryear{Weiss, Jacob and Duveiller}{Weiss et al.}{2020}]{weiss2020}
+Weiss, M., Jacob, F. and Duveiller, G. (2020) `Remote sensing for agricultural applications: a meta-review', \textit{Remote Sensing of Environment}, 236, p. 111402.
+
+\end{thebibliography}
+
+\end{document}

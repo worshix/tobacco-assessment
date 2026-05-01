@@ -1,7 +1,7 @@
 # Fdb version 4
-["pdflatex"] 1777662942.32108 "/home/worshix/school-projects/tobacco-assessment/document/document.tex" "document.pdf" "document" 1777662946.45121 0
+["pdflatex"] 1777669357.05885 "/home/worshix/school-projects/tobacco-assessment/document/document.tex" "document.pdf" "document" 1777669361.10704 0
   "/etc/texmf/web2c/texmf.cnf" 1763803635.1071 475 c0e671620eb5563b2130f56340a5fde8 ""
-  "/home/worshix/school-projects/tobacco-assessment/document/document.tex" 1777662770.91098 127304 ab56e7719d2d3221add68be438913b3c ""
+  "/home/worshix/school-projects/tobacco-assessment/document/document.tex" 1777669352.02736 126223 9d3f840be0db8987ebc956c471dee7b9 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/adobe/symbol/psyr.tfm" 1136768653 1408 5937f58aa508ea2cea4901c07d10f5fe ""
@@ -240,12 +240,12 @@
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1763803678.85973 5472669 54eaf61a88b6b7896ebd0dac973cb29c ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1763803791 8213357 d33d41fe8cf9e9ce27b2ac87fd9af8ca ""
   "chapters_5_6.tex" 1777662942.01607 63235 9d5c9c47a37ca8e101796d612bd4b62b ""
-  "document.aux" 1777662946.27426 31792 b8505277d10bf2c889ab550f3db96c0f "pdflatex"
-  "document.lof" 1777662946.27982 2079 73708a7ba9132bcc71abcff849596e48 "pdflatex"
-  "document.lot" 1777662946.27982 1358 17f8a4ca06297548e509add3ef81a139 "pdflatex"
-  "document.out" 1777662946.27826 21186 aef185cfd58dc4e7dfd830216fde00aa "pdflatex"
-  "document.tex" 1777662770.91098 127304 ab56e7719d2d3221add68be438913b3c ""
-  "document.toc" 1777662946.27982 10965 6cd82cdc7bfd9a2aadf4d9293e258ff7 "pdflatex"
+  "document.aux" 1777669360.86582 31790 d43794adf67f21df902212996010a1c2 "pdflatex"
+  "document.lof" 1777669360.87282 2079 88372ddf042d8a39a28d865abf22c511 "pdflatex"
+  "document.lot" 1777669360.87282 1358 ea83e715f485009ac847cb6326c762d9 "pdflatex"
+  "document.out" 1777669360.87182 21186 aef185cfd58dc4e7dfd830216fde00aa "pdflatex"
+  "document.tex" 1777669352.02736 126223 9d3f840be0db8987ebc956c471dee7b9 ""
+  "document.toc" 1777669360.87282 10963 1bc5b9c0dd4aece156d96a88a449a2cd "pdflatex"
   "hit_logo.png" 1776221052.783 180107 f266d0e74803c9abc63dea4bf979ed1c ""
   (generated)
   "document.aux"

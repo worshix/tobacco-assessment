@@ -1,0 +1,233 @@
+% ============================================================
+%  Prince Rupiya – H220536M – HIT 400 Project Document
+%  Satellite-Based Tobacco Crop Health Monitoring System
+%  Using Machine Learning and NDVI Analysis
+%  Harare Institute of Technology, 2025
+%  CHAPTER 5: System Design (Standalone)
+% ============================================================
+
+\documentclass[12pt,a4paper]{report}
+
+% ---- Page Layout ----
+\usepackage[top=1in,bottom=1in,left=1.25in,right=1in,headheight=14pt]{geometry}
+
+% ---- Fonts & Encoding ----
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{mathptmx}          % Times New Roman
+
+% ---- Line Spacing ----
+\usepackage{setspace}
+\onehalfspacing
+
+% ---- Citations (Harvard / Author-Year) ----
+\usepackage[round,authoryear,sort]{natbib}
+
+% ---- Graphics ----
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% ---- TikZ for Diagrams ----
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,shapes.misc,shapes.multipart,
+                arrows.meta,positioning,fit,
+                backgrounds,calc,decorations.pathreplacing}
+
+% ---- Tables ----
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{makecell}
+
+% ---- Lists ----
+\usepackage{enumitem}
+
+% ---- Colours ----
+\usepackage{xcolor}
+\definecolor{hitblue}{RGB}{0,70,127}
+\definecolor{lightgray}{RGB}{240,240,240}
+\definecolor{darkgreen}{RGB}{0,128,0}
+\definecolor{amber}{RGB}{255,191,0}
+\definecolor{firebrick}{RGB}{178,34,34}
+
+% ---- Maths ----
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% ---- Code Listings ----
+\usepackage{listings}
+\lstset{basicstyle=\small\ttfamily,
+        frame=single,
+        backgroundcolor=\color{lightgray},
+        breaklines=true}
+
+% ---- Headers / Footers ----
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\leftmark}
+\fancyhead[R]{\small Prince Rupiya | H220536M}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ---- Hyperlinks ----
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,
+            linkcolor=hitblue,
+            citecolor=hitblue,
+            urlcolor=hitblue}
+
+% ---- Chapter Titles ----
+\usepackage{titlesec}
+\titleformat{\chapter}[block]
+  {\normalfont\Large\bfseries\color{hitblue}}
+  {\chaptername\ \thechapter:}{0.5em}{}
+\titlespacing*{\chapter}{0pt}{20pt}{15pt}
+
+% ---- Table of Contents ----
+\usepackage{tocloft}
+\renewcommand{\cfttoctitlefont}{\Large\bfseries\color{hitblue}}
+\renewcommand{\cftloftitlefont}{\Large\bfseries\color{hitblue}}
+\renewcommand{\cftlottitlefont}{\Large\bfseries\color{hitblue}}
+
+% ---- Gantt Chart ----
+\usepackage{pgfgantt}
+
+% ---- Verbatim ----
+\usepackage{verbatim}
+
+% ============================================================
+%  Helper: diagram description box
+% ============================================================
+\usepackage{tcolorbox}
+\tcbuselibrary{skins}
+\newtcolorbox{diagrambox}[1]{
+  colback=lightgray,colframe=hitblue,
+  title={\textbf{Diagram Description — #1}},
+  fonttitle=\small\bfseries,
+  boxrule=0.8pt}
+
+% ============================================================
+\begin{document}
+% ============================================================
+
+\pagenumbering{arabic}
+\setcounter{chapter}{4}   % so \chapter{} renders as Chapter 5
+
+\input{ch5_content}
+
+% ============================================================
+%  REFERENCES
+% ============================================================
+\clearpage
+\addcontentsline{toc}{chapter}{References}
+\markboth{REFERENCES}{}
+
+\begin{thebibliography}{99}
+
+\bibitem[\protect\citeauthoryear{Bégué et al.}{Bégué et al.}{2018}]{begue2018}
+Bégué, A., Arvor, D., Bellon, B., Betbeder, J., de Abelleyra, D., Ferraz, R.P.D., Lebourgeois, V., Lelong, C., Simões, M. and Verón, S.R. (2018) `Remote sensing and cropping practices: a review', \textit{Remote Sensing}, 10(1), p. 99.
+
+\bibitem[\protect\citeauthoryear{Breiman}{Breiman}{2001}]{breiman2001}
+Breiman, L. (2001) `Random forests', \textit{Machine Learning}, 45(1), pp. 5--32.
+
+\bibitem[\protect\citeauthoryear{Chlingaryan, Sukkarieh and Whelan}{Chlingaryan et al.}{2018}]{chlingaryan2018}
+Chlingaryan, A., Sukkarieh, S. and Whelan, B. (2018) `Machine learning approaches for crop yield prediction and nitrogen status estimation in precision agriculture: a review', \textit{Computers and Electronics in Agriculture}, 151, pp. 61--69.
+
+\bibitem[\protect\citeauthoryear{Climate Corporation}{Climate Corporation}{2023}]{climcorp2023}
+Climate Corporation (2023) \textit{Climate FieldView Platform Documentation}. Available at: https://climate.com/fieldview (Accessed: 5 February 2025).
+
+\bibitem[\protect\citeauthoryear{CropIn Technology}{CropIn Technology}{2023}]{cropin2023}
+CropIn Technology (2023) \textit{SmartFarm Platform Overview}. Available at: https://www.cropin.com (Accessed: 10 February 2025).
+
+\bibitem[\protect\citeauthoryear{Digital Green}{Digital Green}{2023}]{digitalgreen2023}
+Digital Green (2023) \textit{Digital Green Technology Platform}. Available at: https://www.digitalgreen.org (Accessed: 12 February 2025).
+
+\bibitem[\protect\citeauthoryear{European Space Agency}{ESA}{2023}]{esa2023}
+European Space Agency (2023) \textit{Sentinel-2 User Handbook}. 2nd edn. Paris: ESA.
+
+\bibitem[\protect\citeauthoryear{Farmerline}{Farmerline}{2023}]{farmerline2023}
+Farmerline (2023) \textit{Farmerline Smart Farming Tools}. Available at: https://farmerline.co (Accessed: 10 February 2025).
+
+\bibitem[\protect\citeauthoryear{Food and Agriculture Organization of the United Nations}{FAO}{2023}]{fao2023}
+Food and Agriculture Organization of the United Nations (2023) \textit{FAOSTAT: Crops and Livestock Products}. Available at: https://www.fao.org/faostat (Accessed: 10 January 2025).
+
+\bibitem[\protect\citeauthoryear{Gebbers and Adamchuk}{Gebbers and Adamchuk}{2010}]{gebbers2010}
+Gebbers, R. and Adamchuk, V.I. (2010) `Precision agriculture and food security', \textit{Science}, 327(5967), pp. 828--831.
+
+\bibitem[\protect\citeauthoryear{Gorelick et al.}{Gorelick et al.}{2017}]{gorelick2017}
+Gorelick, N., Hancher, M., Dixon, M., Ilyushchenko, S., Thau, D. and Moore, R. (2017) `Google Earth Engine: planetary-scale geospatial analysis for everyone', \textit{Remote Sensing of Environment}, 202, pp. 18--27.
+
+\bibitem[\protect\citeauthoryear{Kamilaris and Prenafeta-Boldú}{Kamilaris and Prenafeta-Boldú}{2018}]{kamilaris2018}
+Kamilaris, A. and Prenafeta-Boldú, F.X. (2018) `Deep learning in agriculture: a survey', \textit{Computers and Electronics in Agriculture}, 147, pp. 70--90.
+
+\bibitem[\protect\citeauthoryear{Liakos et al.}{Liakos et al.}{2018}]{liakos2018}
+Liakos, K.G., Busato, P., Moshou, D., Pearson, S. and Bochtis, D. (2018) `Machine learning in agriculture: a review', \textit{Sensors}, 18(8), p. 2674.
+
+\bibitem[\protect\citeauthoryear{Ministry of Lands, Agriculture, Fisheries, Water and Rural Development}{Ministry of Agriculture}{2022}]{moa2022}
+Ministry of Lands, Agriculture, Fisheries, Water and Rural Development (2022) \textit{Zimbabwe Agricultural Development Strategy II (2021--2025)}. Harare: Government of Zimbabwe.
+
+\bibitem[\protect\citeauthoryear{Nyoka, Dube and Masocha}{Nyoka et al.}{2020}]{nyoka2020}
+Nyoka, M., Dube, T. and Masocha, M. (2020) `Assessing the utility of remote sensing data in monitoring tobacco crop health in Zimbabwe', \textit{South African Geographical Journal}, 102(1), pp. 15--32.
+
+\bibitem[\protect\citeauthoryear{Open-Meteo}{Open-Meteo}{2023}]{openmeteo2023}
+Open-Meteo (2023) \textit{Open-Meteo Weather API Documentation}. Available at: https://open-meteo.com/en/docs (Accessed: 20 January 2025).
+
+\bibitem[\protect\citeauthoryear{Pedregosa et al.}{Pedregosa et al.}{2011}]{pedregosa2011}
+Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., Blondel, M., Prettenhofer, P., Weiss, R., Dubourg, V. and Vanderplas, J. (2011) `Scikit-learn: machine learning in Python', \textit{Journal of Machine Learning Research}, 12, pp. 2825--2830.
+
+\bibitem[\protect\citeauthoryear{Perera, Liu and Jayawardena}{Perera et al.}{2015}]{perera2015}
+Perera, C., Liu, C.H. and Jayawardena, S. (2015) `The emerging Internet of Things marketplace from an industrial perspective: a survey', \textit{IEEE Transactions on Emerging Topics in Computing}, 3(4), pp. 585--598.
+
+\bibitem[\protect\citeauthoryear{Pfleeger and Atlee}{Pfleeger and Atlee}{2010}]{pfleeger2010}
+Pfleeger, S.L. and Atlee, J.M. (2010) \textit{Software Engineering: Theory and Practice}. 4th edn. Upper Saddle River, NJ: Pearson.
+
+\bibitem[\protect\citeauthoryear{PostgreSQL Global Development Group}{PostgreSQL}{2023}]{postgresql2023}
+PostgreSQL Global Development Group (2023) \textit{PostgreSQL 16 Documentation}. Available at: https://www.postgresql.org/docs/16 (Accessed: 15 January 2025).
+
+\bibitem[\protect\citeauthoryear{Prisma}{Prisma}{2023}]{prisma2023}
+Prisma (2023) \textit{Prisma ORM Documentation}. Available at: https://www.prisma.io/docs (Accessed: 15 January 2025).
+
+\bibitem[\protect\citeauthoryear{Regrow Ag}{Regrow Ag}{2023}]{regrow2023}
+Regrow Ag (2023) \textit{Regrow Sustainable Agriculture Platform}. Available at: https://www.regrow.ag (Accessed: 15 February 2025).
+
+\bibitem[\protect\citeauthoryear{Rose et al.}{Rose et al.}{2016}]{rose2016}
+Rose, D.C., Sutherland, W.J., Parker, C., Lobley, M., Winter, M., Morris, C., Twining, S., Ffoulkes, C., Amano, T. and Dicks, L.V. (2016) `Decision support tools for agriculture: towards effective design and delivery', \textit{Agricultural Systems}, 149, pp. 165--174.
+
+\bibitem[\protect\citeauthoryear{Rouse et al.}{Rouse et al.}{1974}]{rouse1974}
+Rouse, J.W., Haas, R.H., Schell, J.A. and Deering, D.W. (1974) `Monitoring vegetation systems in the Great Plains with ERTS', in \textit{Third Earth Resources Technology Satellite-1 Symposium}, vol. 1. Greenbelt, MD: NASA, pp. 309--317.
+
+\bibitem[\protect\citeauthoryear{Rwizi, Sibanda and Chimonyo}{Rwizi et al.}{2021}]{rwizi2021}
+Rwizi, T.L., Sibanda, M. and Chimonyo, V.G.P. (2021) `Use of satellite data for agricultural applications in Zimbabwe: opportunities and challenges', \textit{Zimbabwe Journal of Agricultural Sciences}, 3(1), pp. 22--38.
+
+\bibitem[\protect\citeauthoryear{SatAgro}{SatAgro}{2023}]{satagtro2023}
+SatAgro (2023) \textit{SatAgro Satellite Monitoring Service}. Available at: https://satagtro.com (Accessed: 12 February 2025).
+
+\bibitem[\protect\citeauthoryear{Sommerville}{Sommerville}{2016}]{sommerville2016}
+Sommerville, I. (2016) \textit{Software Engineering}. 10th edn. Harlow: Pearson Education.
+
+\bibitem[\protect\citeauthoryear{Taranis}{Taranis}{2023}]{taranis2023}
+Taranis (2023) \textit{Taranis Aerial Intelligence Platform}. Available at: https://taranis.ag (Accessed: 5 February 2025).
+
+\bibitem[\protect\citeauthoryear{Tobacco Industry and Marketing Board}{TIMB}{2023}]{timb2023}
+Tobacco Industry and Marketing Board (2023) \textit{Annual Report 2022/2023}. Harare: TIMB.
+
+\bibitem[\protect\citeauthoryear{Tucker}{Tucker}{1979}]{tucker1979}
+Tucker, C.J. (1979) `Red and photographic infrared linear combinations for monitoring vegetation', \textit{Remote Sensing of Environment}, 8(2), pp. 127--150.
+
+\bibitem[\protect\citeauthoryear{Weiss, Jacob and Duveiller}{Weiss et al.}{2020}]{weiss2020}
+Weiss, M., Jacob, F. and Duveiller, G. (2020) `Remote sensing for agricultural applications: a meta-review', \textit{Remote Sensing of Environment}, 236, p. 111402.
+
+\bibitem[\protect\citeauthoryear{Wieringa}{Wieringa}{2014}]{wieringa2014}
+Wieringa, R.J. (2014) \textit{Design Science Methodology for Information Systems and Software Engineering}. Berlin: Springer.
+
+\bibitem[\protect\citeauthoryear{Wolfert et al.}{Wolfert et al.}{2017}]{wolfert2017}
+Wolfert, S., Ge, L., Verdouw, C. and Bogaardt, M.J. (2017) `Big data in smart farming: a review', \textit{Agricultural Systems}, 153, pp. 69--80.
+
+\end{thebibliography}
+
+\end{document}

@@ -1,0 +1,187 @@
+\chapter{System Implementation}
+% ============================================================
+
+\section{Introduction}
+
+This chapter records how the designs from Chapter~5 were turned into a working application. It covers the development environment, the application's directory structure, and the key implementation decisions for each major component: the interactive map and frontend, the backend API routes, the Google Earth Engine satellite integration, the machine learning pipeline, and the database. Where a full code listing is given in the appendices, this chapter focuses on the design rationale rather than reproducing every line. The intent is to explain \emph{why} things were built the way they were, not just \emph{what} was built.
+
+The implementation was carried out over roughly four months, working iteratively rather than phase-by-phase. The machine learning model was trained and exported early so that the full analysis pipeline could be exercised end-to-end from the start, catching integration issues early rather than at the end. Interface work and backend work progressed in parallel, connected through an agreed API contract that was finalised during the design phase.
+
+\section{Development Environment and Tools}
+
+Table~\ref{tab:devtools} lists the core tools used during development, along with the version and the reason each was chosen.
+
+\begin{table}[H]
+  \centering
+  \caption{Development Tools and Technologies}
+  \label{tab:devtools}
+  \begin{tabularx}{\textwidth}{p{3.5cm} p{1.8cm} X}
+    \toprule
+    \textbf{Tool / Technology} & \textbf{Version} & \textbf{Rationale} \\
+    \midrule
+    Next.js              & 14         & Full-stack React framework with API routes, server rendering, and serverless deployment support. Single language (TypeScript) across frontend and backend. \\[4pt]
+    TypeScript           & 5.x        & Static typing catches integration errors between modules at compile time, which matters when passing feature vectors between the satellite module, inference module, and API route. \\[4pt]
+    Tailwind CSS         & 4.x        & Utility-first CSS framework enabling rapid UI iteration without writing a separate stylesheet. \\[4pt]
+    shadcn/ui            & Latest     & Accessible, unstyled Radix-based component library — badges, cards, accordions, and tooltips used throughout the results page. \\[4pt]
+    React-Leaflet        & 4.x        & React bindings for Leaflet.js, providing the interactive satellite map component. \\[4pt]
+    Leaflet-Draw         & 1.x        & Leaflet plugin providing the polygon drawing toolbar and shape event callbacks. \\[4pt]
+    Leaflet.heat         & 0.2        & Lightweight heatmap canvas overlay for Leaflet, used to render the per-pixel NDVI stress layer. \\[4pt]
+    Recharts             & 2.x        & React charting library used for the NDVI history area chart on the results page. \\[4pt]
+    Prisma ORM           & 5.x        & Schema-first ORM with TypeScript type generation, SQLite support, and straightforward migration tooling. \citep{prisma2023} \\[4pt]
+    SQLite               & 3.x        & Embedded, file-based relational database for the prototype. Zero external service dependency. \\[4pt]
+    Python               & 3.11       & Used exclusively for the offline model training pipeline; not required at application runtime. \\[4pt]
+    scikit-learn         & 1.3        & Provides the \texttt{LogisticRegression} classifier used for training. \citep{pedregosa2011} \\[4pt]
+    bcryptjs             & 2.x        & Password hashing library with configurable work factor; used for user authentication. \\[4pt]
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{Application Structure}
+
+The application follows the Next.js App Router convention. Table~\ref{tab:structure} gives an overview of the directory layout and the purpose of each major folder.
+
+\begin{table}[H]
+  \centering
+  \caption{Application Directory Structure}
+  \label{tab:structure}
+  \begin{tabularx}{\textwidth}{p{4.5cm} X}
+    \toprule
+    \textbf{Directory / File} & \textbf{Purpose} \\
+    \midrule
+    \texttt{app/}                   & Next.js App Router root. Contains all pages and API routes. \\
+    \texttt{app/api/auth/}          & Login, sign-up, and logout API route handlers. \\
+    \texttt{app/api/field/}         & Field creation and deletion API route handlers. \\
+    \texttt{app/api/analyse/}       & Core analysis pipeline route handler. \\
+    \texttt{app/dashboard/}         & Dashboard page showing the user's field list. \\
+    \texttt{app/field/create/}      & Field creation page with interactive map. \\
+    \texttt{app/field/[fieldId]/analyse/} & Analysis results page. \\
+    \texttt{components/Map/}        & Leaflet map components (SSR wrapper, draw map, view map). \\
+    \texttt{components/ui/}         & shadcn/ui component library (badges, cards, buttons, etc.). \\
+    \texttt{lib/gee/}               & Google Earth Engine integration module. \\
+    \texttt{lib/ml/}                & JavaScript logistic regression inference module. \\
+    \texttt{lib/analysis/}          & Recommendation engine. \\
+    \texttt{lib/geo/}               & Polygon utility functions (area, centroid, GeoJSON parsing). \\
+    \texttt{models/src/}            & Python model training and export scripts. \\
+    \texttt{models/models/}         & Exported JSON model weights and threshold configuration. \\
+    \texttt{prisma/}                & Prisma schema file and SQLite database file. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{Frontend Implementation}
+
+\subsection{Interactive Map Component}
+
+The interactive satellite map is implemented in \texttt{components/Map/LeafletMap.tsx}. Because Leaflet requires access to the browser's \texttt{window} object, it cannot run during Next.js server-side rendering. The component is loaded through \texttt{next/dynamic} with \texttt{ssr: false}, wrapped in a lightweight \texttt{FieldMap.tsx} component that renders a loading placeholder during the hydration phase.
+
+The map configuration enables two tile layers simultaneously: ESRI World Imagery for the satellite basemap and a Stamen Toner Labels layer at 70\% opacity for place name overlay. Farmers can see both the satellite imagery and recognisable place names when navigating to their field area.
+
+Polygon drawing is handled by the \texttt{EditControl} component from the \texttt{react-leaflet-draw} library. All draw tools except the polygon tool are disabled in the control configuration. When a polygon is created, edited, or deleted, the corresponding event handler serialises the shape to GeoJSON and passes it up through a callback prop. The polygon is styled with a 40\% opacity emerald fill so that the satellite basemap remains visible through the drawn boundary.
+
+\subsection{Analysis Results Page}
+
+The results page (\texttt{app/field/[fieldId]/analyse/page.tsx}) triggers the analysis on mount using a \texttt{useEffect} hook, posting the field identifier to \texttt{/api/analyse} and rendering a loading spinner while the analysis runs. On response, the health status badge, recommendation cards, risk indicators, environment summary, heatmap, and NDVI history chart are all rendered from the returned JSON.
+
+The NDVI heatmap is rendered as a Leaflet.heat layer added imperatively to the map instance using \texttt{useMap()} inside a dedicated \texttt{HeatmapLayer} component. The gradient is configured to map low intensity (high NDVI, low stress) to green and high intensity (low NDVI, high stress) to red, so the spatial colour coding aligns with the health badge colours used elsewhere in the interface.
+
+The NDVI history area chart uses Recharts \texttt{AreaChart} with a linear gradient fill. The five data points represent the per-scene mean NDVI values across the analysis window, plotted in order of acquisition date.
+
+\section{Backend API Implementation}
+
+\subsection{Authentication Routes}
+
+Session management is handled through HTTP-only cookies rather than localStorage-based JWT tokens. An HTTP-only cookie cannot be read by client-side JavaScript, which prevents a whole category of token-theft attacks. The cookie stores the user's \texttt{id} from the database; every protected API route reads that cookie and uses it to scope database queries to the authenticated user's records only.
+
+Password hashing uses \texttt{bcryptjs} with a work factor of 12. At work factor 12, a single hash computation takes approximately 250--300\,ms on typical server hardware — slow enough to make brute-force attacks impractical, but fast enough that login latency remains acceptable.
+
+\subsection{Field Management Routes}
+
+The \texttt{/api/field} POST handler validates the incoming field name, parses the GeoJSON polygon, computes the field area in hectares using the Shoelace formula, and calls the OpenStreetMap Nominatim API to reverse-geocode the polygon centroid to a human-readable location name. All three computed values — area, location, and GeoJSON — are stored in the field record.
+
+The Shoelace formula computes the area of a polygon from its vertex coordinates:
+\begin{equation}
+  A = \frac{1}{2} \left| \sum_{i=0}^{n-1} (x_i y_{i+1} - x_{i+1} y_i) \right|
+  \label{eq:shoelace}
+\end{equation}
+
+\noindent The coordinates are given in decimal degrees, so the result is scaled from square degrees to square kilometres using the Earth's mean radius (6371\,km) and then converted to hectares.
+
+\subsection{Analysis Route}
+
+The \texttt{/api/analyse} POST handler is the most involved route in the application. It performs the following steps in order:
+
+\begin{enumerate}
+  \item Validates the session cookie and fetches the field record, filtering on both \texttt{fieldId} and \texttt{userId} to prevent cross-user access.
+  \item Parses the stored GeoJSON polygon and extracts the coordinate array.
+  \item Calls \texttt{getSatelliteData(polygon)} from the GEE module. Inside that function, the GEE call and the Open-Meteo call are dispatched with \texttt{Promise.all()} so they run concurrently.
+  \item Assembles the five-feature vector from the returned satellite and weather data.
+  \item Calls \texttt{predictCropHealth(features)} from the inference module.
+  \item Calls \texttt{getRecommendations(\{...\})} from the recommendation engine.
+  \item Writes the complete analysis record to the database using Prisma's \texttt{analysis.create()}.
+  \item Returns the formatted response including all feature values, health status, risk flags, recommendations, and heatmap data.
+\end{enumerate}
+
+\section{Google Earth Engine Integration}
+
+\subsection{Authentication and Service Account}
+
+The GEE integration authenticates using a Google service account. The service account private key and project ID are stored as environment variables (\texttt{GEE\_PRIVATE\_KEY}, \texttt{GEE\_SERVICE\_ACCOUNT}, \texttt{GEE\_PROJECT}), loaded at server start, and used to initialise the GEE client. The service account is registered under a non-commercial research project, qualifying for the free 150 EECU-hours per month Community tier. \citep{gorelick2017}
+
+\subsection{NDVI Retrieval Pipeline}
+
+The satellite data module implements the following retrieval pipeline for each analysis request:
+
+\begin{enumerate}
+  \item The field's GeoJSON polygon is converted to a GEE \texttt{Geometry} object.
+  \item The \texttt{COPERNICUS/S2\_SR\_HARMONIZED} image collection is filtered to the field geometry and a 30-day lookback window. Scenes with more than 20\% cloud cover are excluded using the \texttt{CLOUDY\_PIXEL\_PERCENTAGE} property.
+  \item For each qualifying scene, per-pixel NDVI is computed as a new image band: \texttt{ndvi = image.normalizedDifference(['B8', 'B4'])}.
+  \item The NDVI images are reduced to a temporal mean using \texttt{ImageCollection.mean()}, and separately to a time-series of per-scene mean values for trend computation.
+  \item The spatial pixel distribution within the polygon is sampled at 10-metre resolution using \texttt{Image.sample()} to produce the within-field variance and the heatmap pixel array.
+\end{enumerate}
+
+\subsection{Heatmap Data Generation}
+
+The per-pixel NDVI sample from GEE returns a \texttt{FeatureCollection} where each feature represents one 10-metre pixel and carries its geographic coordinates and NDVI value. This collection is converted on the server into a compact array of \texttt{[latitude, longitude, intensity]} triples, where intensity is $(1 - \text{NDVI})$ clipped to $[0, 1]$ — so that a pixel with NDVI $= 0.9$ (healthy) has intensity 0.1 (green on the heatmap) and a pixel with NDVI $= 0.2$ (stressed) has intensity 0.8 (red on the heatmap).
+
+The pixel array is downsampled at a fixed interval before serialisation to keep the heatmap JSON payload under 50\,KB for typical field sizes. The full pixel resolution is retained in the raw data JSON for potential future use.
+
+\section{Machine Learning Implementation}
+
+\subsection{Training Pipeline}
+
+The logistic regression classifier is trained entirely offline in Python using scikit-learn~1.3. The training script (\texttt{models/src/train\_health\_model.py}) is reproduced in full in Appendix~\ref{app:training}. A summary of the process:
+
+\begin{enumerate}
+  \item A labelled dataset of 610 observations is loaded from \texttt{models/data/raw/dataset.csv}. Each row contains five feature values and a health status label (HEALTHY, MODERATE\_STRESS, or HIGH\_STRESS), assigned using the agronomically validated NDVI thresholds from Table~\ref{tab:thresholds}.
+  \item An 80/20 stratified train-test split is applied with \texttt{random\_state=42} for reproducibility, giving 488 training samples and 122 test samples.
+  \item A \texttt{LogisticRegression} model is fitted with \texttt{max\_iter=1000} to ensure convergence.
+  \item The trained model is evaluated on the held-out test set, achieving 97\% overall accuracy.
+\end{enumerate}
+
+\subsection{Model Export and JavaScript Inference}
+
+After training, the model weights are exported to a JSON file using the export script (\texttt{models/src/export\_model.py}, Appendix~\ref{app:export}). The JSON file stores the coefficient matrix and intercept vector:
+
+\begin{lstlisting}[language=Python, caption={Structure of the exported model JSON}, label={lst:modelstructure}]
+{
+  "classes":      ["HEALTHY", "HIGH_STRESS", "MODERATE_STRESS"],
+  "coefficients": [[...], [...], [...]],  // shape: [3, 5]
+  "intercept":    [...]                   // length: 3
+}
+\end{lstlisting}
+
+The JavaScript inference module (\texttt{lib/ml/inference.ts}, Appendix~\ref{app:inference}) imports this JSON file directly. At runtime it computes a linear score for each class and returns the class with the highest score. The complete inference function is seven lines of TypeScript. No external ML library is needed at runtime — the exported weights are just numbers.
+
+\subsection{Recommendation Engine}
+
+The recommendation engine (\texttt{lib/analysis/recommendations.ts}, Appendix~\ref{app:recommendations}) takes the health status, NDVI trend direction, and raw feature values as inputs and returns an array of recommendation strings. The four rules from Table~\ref{tab:recrules} are evaluated in sequence. Rules are independent and additive — all rules that fire are included in the output, not just the first one. A default recommendation is returned if no rule fires, ensuring the results page always has at least one item to display.
+
+\section{Database Implementation}
+
+The Prisma schema (Appendix~\ref{app:schema}) defines all three models and the two enumerations. The development database is a single SQLite file (\texttt{dev.db}) stored at the project root. The Prisma client is instantiated once in \texttt{lib/prisma.ts} using a global singleton pattern to avoid opening multiple database connections during Next.js hot-reload in development.
+
+Database migrations are managed through Prisma Migrate. Running \texttt{npx prisma migrate dev} reads the schema, computes the diff against the current database state, generates a SQL migration file, and applies it — all in a single command. For the production transition to PostgreSQL, the only required change is the \texttt{datasource db \{ provider = "postgresql" \}} line in \texttt{schema.prisma}. \citep{prisma2023}
+
+\section{Conclusion}
+
+All seven technical objectives from Chapter~1 have been addressed in the implementation. The full-stack Next.js application is deployable serverlessly, the logistic regression classifier runs in JavaScript without a Python backend, GEE retrieves real Sentinel-2 NDVI data for the user's drawn polygon, and the within-field heatmap renders per-pixel stress levels directly on a Leaflet map. Chapter~7 evaluates the implemented system quantitatively — measuring the classifier's performance on held-out data, assessing each functional requirement against the implementation, and testing the non-functional properties including performance and security.

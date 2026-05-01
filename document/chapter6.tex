@@ -1,0 +1,143 @@
+% ============================================================
+%  Prince Rupiya – H220536M – HIT 400 Project Document
+%  Satellite-Based Tobacco Crop Health Monitoring System
+%  Using Machine Learning and NDVI Analysis
+%  Harare Institute of Technology, 2025
+%  CHAPTER 6: System Implementation (Standalone)
+% ============================================================
+
+\documentclass[12pt,a4paper]{report}
+
+% ---- Page Layout ----
+\usepackage[top=1in,bottom=1in,left=1.25in,right=1in,headheight=14pt]{geometry}
+
+% ---- Fonts & Encoding ----
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{mathptmx}          % Times New Roman
+
+% ---- Line Spacing ----
+\usepackage{setspace}
+\onehalfspacing
+
+% ---- Citations (Harvard / Author-Year) ----
+\usepackage[round,authoryear,sort]{natbib}
+
+% ---- Graphics ----
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% ---- TikZ for Diagrams ----
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,shapes.misc,shapes.multipart,
+                arrows.meta,positioning,fit,
+                backgrounds,calc,decorations.pathreplacing}
+
+% ---- Tables ----
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{makecell}
+
+% ---- Lists ----
+\usepackage{enumitem}
+
+% ---- Colours ----
+\usepackage{xcolor}
+\definecolor{hitblue}{RGB}{0,70,127}
+\definecolor{lightgray}{RGB}{240,240,240}
+\definecolor{darkgreen}{RGB}{0,128,0}
+\definecolor{amber}{RGB}{255,191,0}
+\definecolor{firebrick}{RGB}{178,34,34}
+
+% ---- Maths ----
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% ---- Code Listings ----
+\usepackage{listings}
+\lstset{basicstyle=\small\ttfamily,
+        frame=single,
+        backgroundcolor=\color{lightgray},
+        breaklines=true}
+
+% ---- Headers / Footers ----
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\leftmark}
+\fancyhead[R]{\small Prince Rupiya | H220536M}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ---- Hyperlinks ----
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,
+            linkcolor=hitblue,
+            citecolor=hitblue,
+            urlcolor=hitblue}
+
+% ---- Chapter Titles ----
+\usepackage{titlesec}
+\titleformat{\chapter}[block]
+  {\normalfont\Large\bfseries\color{hitblue}}
+  {\chaptername\ \thechapter:}{0.5em}{}
+\titlespacing*{\chapter}{0pt}{20pt}{15pt}
+
+% ---- Table of Contents ----
+\usepackage{tocloft}
+\renewcommand{\cfttoctitlefont}{\Large\bfseries\color{hitblue}}
+\renewcommand{\cftloftitlefont}{\Large\bfseries\color{hitblue}}
+\renewcommand{\cftlottitlefont}{\Large\bfseries\color{hitblue}}
+
+% ---- Gantt Chart ----
+\usepackage{pgfgantt}
+
+% ---- Verbatim ----
+\usepackage{verbatim}
+
+% ============================================================
+%  Helper: diagram description box
+% ============================================================
+\usepackage{tcolorbox}
+\tcbuselibrary{skins}
+\newtcolorbox{diagrambox}[1]{
+  colback=lightgray,colframe=hitblue,
+  title={\textbf{Diagram Description — #1}},
+  fonttitle=\small\bfseries,
+  boxrule=0.8pt}
+
+% ============================================================
+\begin{document}
+% ============================================================
+
+\pagenumbering{arabic}
+\setcounter{chapter}{5}   % so \chapter{} renders as Chapter 6
+
+\input{ch6_content}
+
+% ============================================================
+%  REFERENCES
+% ============================================================
+\clearpage
+\addcontentsline{toc}{chapter}{References}
+\markboth{REFERENCES}{}
+
+\begin{thebibliography}{99}
+
+\bibitem[\protect\citeauthoryear{Gorelick et al.}{Gorelick et al.}{2017}]{gorelick2017}
+Gorelick, N., Hancher, M., Dixon, M., Ilyushchenko, S., Thau, D. and Moore, R. (2017) `Google Earth Engine: planetary-scale geospatial analysis for everyone', \textit{Remote Sensing of Environment}, 202, pp. 18--27.
+
+\bibitem[\protect\citeauthoryear{Pedregosa et al.}{Pedregosa et al.}{2011}]{pedregosa2011}
+Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., Blondel, M., Prettenhofer, P., Weiss, R., Dubourg, V. and Vanderplas, J. (2011) `Scikit-learn: machine learning in Python', \textit{Journal of Machine Learning Research}, 12, pp. 2825--2830.
+
+\bibitem[\protect\citeauthoryear{Prisma}{Prisma}{2023}]{prisma2023}
+Prisma (2023) \textit{Prisma ORM Documentation}. Available at: https://www.prisma.io/docs (Accessed: 15 January 2025).
+
+\end{thebibliography}
+
+\end{document}

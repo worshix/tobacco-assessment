@@ -338,19 +338,10 @@ Given a web-based system that combines live Sentinel-2 NDVI data retrieved via G
 The overarching aim is to design and implement a Satellite-Based Tobacco Crop Health Monitoring System that smallholder farmers in Zimbabwe can actually use — accessible, accurate, and deployable without specialist infrastructure. The specific objectives are:
 
 \begin{enumerate}
-  \item Build a web platform that lets farmers draw field polygons on an interactive map and trigger a satellite-based crop health analysis on demand.
-
-  \item Pull live Sentinel-2 Level-2A imagery through the Google Earth Engine API to compute real NDVI values for each user-defined polygon, replacing estimated figures with actual satellite measurements.
-
-  \item Train a logistic regression classifier on ground-truth satellite and weather observations to categorise tobacco field health as \emph{Healthy}, \emph{Moderate Stress}, or \emph{High Stress}.
-
-  \item Implement temporal NDVI trend analysis across a 14-to-30-day window, so that declining vegetation trajectories can be flagged before fields reach a critical stress state.
-
-  \item Compute within-field spatial variability from per-pixel NDVI distributions and render it as a heatmap overlay, enabling farmers to pinpoint exactly where stress is concentrated.
-
-  \item Build a rule-based recommendation engine that converts the classifier output and raw feature values into plain-language advice on irrigation, disease monitoring, and field inspection.
-
-  \item Architect the system so Python handles model training offline and JavaScript handles inference at runtime — making the whole thing deployable serverlessly, without a Python backend.
+  \item To define tobacco field boundaries through interactive polygon drawing. 
+  \item To classify tobacco crop health. 
+  \item To flag declining crop health. 
+  \item To generate heat maps that identify crop stress hotspots.
 \end{enumerate}
 
 \section{Expected Results}

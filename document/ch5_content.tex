@@ -1,0 +1,739 @@
+% ============================================================
+\chapter{System Design}
+% ============================================================
+
+\section{Introduction}
+
+The analysis work in Chapter~4 established what the system must do — the actors, the data flows, the use cases, and the requirements that bound the design. This chapter records the decisions about \emph{how} those requirements will be satisfied: what layered structure the application follows, how the database is organised to support both operational and longitudinal use, what the machine learning pipeline looks like from raw satellite observation to health classification, and what each page of the interface presents to a farmer. Getting the architecture right at this point matters because, as \citet{sommerville2016} notes, design errors are the most expensive to fix later, since every implementation phase builds directly on top of them.
+
+The overarching design philosophy is modular separation. Each layer has one job, exposes a clean interface to the layers around it, and does not reach into the internals of anything else. That principle runs through every decision in this chapter — from the way GEE and Open-Meteo calls are isolated in their own modules, to the way Python model training is entirely separate from the JavaScript inference that runs at deployment time. Keeping responsibilities narrow is what makes a system like this maintainable by a single developer and extensible in the future without dismantling what already works.
+
+\section{System Design}
+
+\subsection*{Overall Design Approach}
+
+The system follows a four-layer modular architecture. Satellite data retrieval, backend coordination, intelligence processing, and browser-based presentation each occupy their own layer. Communication between layers flows through defined interfaces rather than direct internal access.
+
+\begin{itemize}
+  \item \textbf{Satellite and weather data acquisition layer}
+    \begin{itemize}
+      \item[-] This layer's only job is to accept a GeoJSON polygon and a date range and return a structured feature set. It holds no business logic and nothing about users or fields.
+      \item[-] Google Earth Engine handles the satellite side. The \texttt{COPERNICUS/S2\_SR\_HARMONIZED} collection is queried with the field polygon as the region of interest, filtered to scenes with cloud cover below 20\% using the QA60 band, and sampled over the analysis window. Per-pixel NDVI is computed at 10-metre resolution from Band~8 (NIR) and Band~4 (Red): $\text{NDVI} = (B_8 - B_4) / (B_8 + B_4)$. The spatial pixel array is retained for heatmap rendering. \citep{gorelick2017, esa2023}
+      \item[-] Weather data is retrieved in parallel from the Open-Meteo API using the field centroid coordinates. Daily temperature and precipitation records over the same window are aggregated into average temperature and total rainfall. Running these two API calls concurrently reduces overall analysis latency. \citep{openmeteo2023}
+      \item[-] The layer returns five engineered values plus a pixel-level NDVI grid. Nothing that calls this layer needs to know anything about HTTP requests, GEE authentication, or how NDVI is computed.
+    \end{itemize}
+
+  \item \textbf{Backend processing and storage layer}
+    \begin{itemize}
+      \item[-] Next.js API routes receive incoming requests, validate the session and ownership, orchestrate calls to the acquisition and intelligence layers, and persist results to the database. Validation is the first thing that runs on every request — an unauthenticated or unauthorised request never reaches any computation.
+      \item[-] Storing raw feature values alongside derived outputs (health status, risk flags) is a deliberate design choice. It means a stored analysis record can be re-evaluated if the model is retrained, and the reasoning behind any past recommendation can be traced back to the data that produced it. \citep{prisma2023}
+      \item[-] The route handler itself is deliberately thin. The satellite module, inference module, and recommendation module each live in separate files, so any one of them can be replaced or updated without touching the request-handling logic.
+    \end{itemize}
+
+  \item \textbf{Intelligence layer}
+    \begin{itemize}
+      \item[-] The logistic regression classifier runs entirely in JavaScript using the exported JSON weight file. No Python interpreter is needed at runtime — the model coefficients and intercepts are loaded once at server start and reused across all inference requests. \citep{pedregosa2011}
+      \item[-] Classification returns one of \texttt{HEALTHY}, \texttt{MODERATE\_STRESS}, or \texttt{HIGH\_STRESS}. The NDVI trend slope is separately classified as \texttt{IMPROVING}, \texttt{STABLE}, or \texttt{DECLINING} from a threshold applied to the raw slope value.
+      \item[-] The recommendation engine evaluates four independent rules against the feature values and health status. Rules are not mutually exclusive: a field with low NDVI, low rainfall, high variance, and elevated temperature fires all four applicable rules simultaneously. \citep{liakos2018}
+    \end{itemize}
+
+  \item \textbf{Presentation layer}
+    \begin{itemize}
+      \item[-] The browser application handles all farmer-facing interaction through server-rendered Next.js~14 pages with TypeScript. Registration, login, field creation, analysis triggering, and result review are each their own page, making the interface navigable even on slow mobile connections.
+      \item[-] The interactive map uses React-Leaflet with an ESRI World Imagery satellite tile layer as the basemap, so farmers can draw polygon boundaries directly over recognisable aerial imagery of their own land. The Leaflet-Draw plugin provides the drawing tools, restricted to the polygon type only.
+      \item[-] Health status is communicated primarily through colour — green for Healthy, amber for Moderate Stress, red for High Stress. \citet{rose2016} identifies plain, immediately readable outputs as one of the strongest predictors of whether farmers actually use a decision support tool. That finding shaped the entire results page design.
+    \end{itemize}
+\end{itemize}
+
+\subsection{How will the System Work?}
+
+The main analysis workflow runs from the farmer selecting a field through to a complete results page being displayed. The steps below trace that flow in the order it actually executes.
+
+\begin{itemize}
+  \item \textbf{Authentication and session management}
+    \begin{itemize}
+      \item[-] The farmer logs in with email and password. The backend validates the submitted password against the stored bcrypt hash and, on success, issues an HTTP-only session cookie. Every API request thereafter is checked against that cookie before any processing begins.
+    \end{itemize}
+
+  \item \textbf{Field creation with interactive boundary drawing}
+    \begin{itemize}
+      \item[-] On the Create Field page, a satellite map loads centred on Zimbabwe. The farmer enters a field name and activates the polygon drawing tool. Clicking around the field perimeter on the satellite imagery closes the polygon; it can be edited or redrawn before saving.
+      \item[-] On submission, the GeoJSON polygon is sent to \texttt{/api/field}. The backend computes the field area using the Shoelace formula, reverse-geocodes the centroid to a place name through the OpenStreetMap Nominatim API, and stores the record.
+    \end{itemize}
+
+  \item \textbf{Satellite data retrieval}
+    \begin{itemize}
+      \item[-] When the farmer triggers an analysis, the stored polygon is retrieved and passed to the satellite module. The GEE service account authenticates and queries \texttt{COPERNICUS/S2\_SR\_HARMONIZED} over a 30-day lookback window, returning the per-pixel NDVI series and spatial grid. The Open-Meteo call runs in parallel.
+    \end{itemize}
+
+  \item \textbf{Feature engineering, classification, and recommendation}
+    \begin{itemize}
+      \item[-] Mean NDVI, trend slope, within-field variance, average temperature, and total rainfall are assembled into the feature vector. The logistic regression classifier scores each class and returns the highest-scoring label. The recommendation engine then evaluates all four rules and returns the matched advice strings.
+    \end{itemize}
+
+  \item \textbf{Storage and display}
+    \begin{itemize}
+      \item[-] The complete analysis record is written to the database. The formatted response — health status, feature values, risk flags, recommendations, and heatmap pixel array — is returned to the browser. The results page renders the health badge, recommendation cards, environment summary, NDVI heatmap overlay, and the NDVI history chart.
+    \end{itemize}
+\end{itemize}
+
+\section{Solution Architecture}
+
+Figure~\ref{fig:arch} presents the proposed system architecture. The four internal layers stack vertically, with the two external data services — Google Earth Engine and Open-Meteo — connecting into the application layer from the right. All farmer interaction flows through the top presentation layer, and all persistence flows down to the data layer.
+
+\begin{figure}[H]
+\centering
+\caption{Proposed System Architecture --- TobaccoGuard}
+\label{fig:arch}
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[
+  box/.style={draw=hitblue,fill=white,rounded corners=3pt,
+              minimum width=3.2cm,minimum height=1.0cm,
+              align=center,font=\small},
+  ext/.style={draw=hitblue!50,fill=amber!15,rounded corners=3pt,
+              minimum width=3.4cm,minimum height=1.0cm,
+              align=center,font=\small},
+  band/.style={draw=hitblue!40,fill=hitblue!6,rounded corners=5pt},
+  arr/.style={->,>=Stealth,draw=hitblue!70,thick},
+  lbl/.style={font=\scriptsize,fill=white,inner sep=1pt}
+]
+  %% ---- Layer bands ----
+  \draw[band] (-0.3,5.5) rectangle (10.3,7.3);
+  \node[font=\footnotesize\bfseries,text=hitblue,anchor=west] at (-0.2,7.05) {Presentation Layer (Browser -- Next.js)};
+
+  \draw[band] (-0.3,3.2) rectangle (10.3,5.0);
+  \node[font=\footnotesize\bfseries,text=hitblue,anchor=west] at (-0.2,4.75) {Application Layer (Next.js API Routes)};
+
+  \draw[band] (-0.3,0.8) rectangle (6.8,2.6);
+  \node[font=\footnotesize\bfseries,text=hitblue,anchor=west] at (-0.2,2.35) {Intelligence Layer};
+
+  \draw[band] (7.1,0.8) rectangle (10.3,2.6);
+  \node[font=\footnotesize\bfseries,text=hitblue,anchor=west] at (7.2,2.35) {Data Layer};
+
+  %% ---- Presentation boxes ----
+  \node[box] at (1.6,6.4)  {Auth Pages\\Login · Sign-Up};
+  \node[box] at (5.0,6.4)  {Dashboard\\Field List};
+  \node[box] at (8.4,6.4)  {Analysis Results\\Heatmap · Advice};
+
+  %% ---- Application boxes ----
+  \node[box] at (1.6,4.1)  {\texttt{/api/auth}\\Register · Login};
+  \node[box] at (5.0,4.1)  {\texttt{/api/field}\\Create · List · Delete};
+  \node[box] at (8.4,4.1)  {\texttt{/api/analyse}\\Core pipeline};
+
+  %% ---- Intelligence boxes ----
+  \node[box] at (1.6,1.7)  {ML Inference\\Logistic Regression\\JSON model weights};
+  \node[box] at (5.0,1.7)  {Recommendation\\Engine\\4 independent rules};
+
+  %% ---- Data box ----
+  \node[box] at (8.8,1.7)  {SQLite\\via Prisma ORM\\User · Field · Analysis};
+
+  %% ---- Vertical arrows ----
+  \draw[arr] (5.0,5.5) -- node[lbl,right]{HTTPS}(5.0,5.0);
+  \draw[arr] (5.0,3.2) -- (5.0,2.6);
+  \draw[arr] (8.4,3.2) -- node[lbl,right]{read/write}(8.8,2.6);
+
+  %% ---- External services ----
+  \node[ext] at (14.0,4.5) {Google Earth Engine\\Sentinel-2 L2A\\NDVI per pixel};
+  \node[ext] at (14.0,2.5) {Open-Meteo API\\Temperature\\Precipitation};
+
+  \node[font=\small\bfseries,text=hitblue] at (14.0,6.0) {External Services};
+
+  \draw[arr] (10.3,4.4) -- node[lbl,above,font=\tiny]{polygon + date range}(12.3,4.4);
+  \draw[arr] (12.3,3.8) -- node[lbl,below,font=\tiny]{NDVI series + pixel grid}(10.3,3.8);
+
+  \draw[arr] (10.3,2.2) -- node[lbl,above,font=\tiny]{centroid + window}(12.3,2.2);
+  \draw[arr] (12.3,1.6) -- node[lbl,below,font=\tiny]{temperature + rainfall}(10.3,1.6);
+
+  \draw[arr] (14.0,3.9) -- (14.0,3.1);
+\end{tikzpicture}%
+}
+\end{figure}
+
+\noindent The analysis route in the application layer is the most complex component in the architecture. It is the only point where both external API calls are made, it is the only caller of the ML inference and recommendation functions, and it is responsible for persisting the complete result before returning the response to the browser. Everything else in the system is kept simple by design.
+
+\section{Database Modelling}
+
+\subsection*{Purpose of the Database}
+
+The database serves two roles. First, it is the operational backbone of the application — it stores user credentials, field polygons, and analysis results in a way that persists across sessions and across seasons. Second, it is the foundation for longitudinal monitoring: every analysis run for a field is stored as a distinct record with a timestamp, which means the system can surface historical NDVI trend data alongside any current reading. That time-series view is, in many ways, more useful to a farmer than any single analysis in isolation. \citep{wolfert2017}
+
+\begin{itemize}
+  \item \textbf{Choice of database technology}
+    \begin{itemize}
+      \item[-] SQLite was selected over a server-managed database for the prototype. Its file-based architecture removes the deployment overhead of a separate database process, and Prisma's ORM layer abstracts the SQL entirely, making a future migration to PostgreSQL a single provider setting change. For a bounded prototype user base without high concurrent write volume, SQLite is sufficient. \citep{prisma2023}
+    \end{itemize}
+
+  \item \textbf{Core datasets}
+    \begin{itemize}
+      \item[-] The most critical data the system stores is the GeoJSON polygon for each field — it is the input to every analysis and cannot be reconstructed from any other record. Analysis records are the second most important: they store both the raw feature values and the derived outputs, so results are auditable and the model's reasoning can be traced to specific observations.
+      \item[-] The three-tier hierarchy — User owns Fields, Fields accumulate Analyses — is the central relational structure. Cascade deletes flow downward: removing a field removes all its historical analyses; removing a user removes all their fields and analyses.
+    \end{itemize}
+\end{itemize}
+
+\subsection{E-R Diagram}
+
+Figure~\ref{fig:erdiag} shows the entity-relationship diagram for the database. The three entities correspond directly to the three Prisma models in the schema.
+
+\begin{figure}[H]
+\centering
+\caption{Entity-Relationship Diagram --- TobaccoGuard Database}
+\label{fig:erdiag}
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[
+  hdr/.style={draw=hitblue,fill=hitblue!20,rectangle,
+              minimum width=5.0cm,minimum height=0.7cm,
+              align=center,font=\small\bfseries},
+  atr/.style={draw=hitblue!50,fill=white,rectangle,
+              minimum width=5.0cm,minimum height=0.55cm,
+              align=left,font=\scriptsize,inner sep=4pt},
+  arr/.style={->,>=Stealth,draw=hitblue,thick}
+]
+  %% ---- USER ----
+  \node[hdr] (uh) at (-5.5, 5)   {USER};
+  \node[atr,below=0pt of uh,anchor=north] (u1) {id : TEXT (PK, cuid)};
+  \node[atr,below=0pt of u1,anchor=north] (u2) {name : TEXT NOT NULL};
+  \node[atr,below=0pt of u2,anchor=north] (u3) {email : TEXT UNIQUE};
+  \node[atr,below=0pt of u3,anchor=north] (u4) {password : TEXT (bcrypt)};
+  \node[atr,below=0pt of u4,anchor=north] (u5) {createdAt : DATETIME};
+
+  %% ---- FIELD ----
+  \node[hdr] (fh) at (0, 5)      {FIELD};
+  \node[atr,below=0pt of fh,anchor=north] (f1) {id : TEXT (PK, cuid)};
+  \node[atr,below=0pt of f1,anchor=north] (f2) {name : TEXT NOT NULL};
+  \node[atr,below=0pt of f2,anchor=north] (f3) {cropType : TEXT};
+  \node[atr,below=0pt of f3,anchor=north] (f4) {polygon : TEXT (GeoJSON)};
+  \node[atr,below=0pt of f4,anchor=north] (f5) {area : REAL (hectares)};
+  \node[atr,below=0pt of f5,anchor=north] (f6) {location : TEXT};
+  \node[atr,below=0pt of f6,anchor=north] (f7) {userId : TEXT (FK)};
+  \node[atr,below=0pt of f7,anchor=north] (f8) {createdAt : DATETIME};
+
+  %% ---- ANALYSIS ----
+  \node[hdr] (ah) at (6.5, 5)    {ANALYSIS};
+  \node[atr,below=0pt of ah,anchor=north] (a1)  {id : TEXT (PK, cuid)};
+  \node[atr,below=0pt of a1,anchor=north] (a2)  {fieldId : TEXT (FK)};
+  \node[atr,below=0pt of a2,anchor=north] (a3)  {meanNDVI : REAL};
+  \node[atr,below=0pt of a3,anchor=north] (a4)  {ndviTrend : ENUM};
+  \node[atr,below=0pt of a4,anchor=north] (a5)  {healthStatus : ENUM};
+  \node[atr,below=0pt of a5,anchor=north] (a6)  {avgTemperature : REAL};
+  \node[atr,below=0pt of a6,anchor=north] (a7)  {totalRainfall : REAL};
+  \node[atr,below=0pt of a7,anchor=north] (a8)  {waterStressRisk : BOOL};
+  \node[atr,below=0pt of a8,anchor=north] (a9)  {diseaseRisk : BOOL};
+  \node[atr,below=0pt of a9,anchor=north] (a10) {rawData : TEXT (JSON)};
+  \node[atr,below=0pt of a10,anchor=north](a11) {recommendations : TEXT};
+  \node[atr,below=0pt of a11,anchor=north](a12) {heatmapData : TEXT};
+  \node[atr,below=0pt of a12,anchor=north](a13) {createdAt : DATETIME};
+
+  %% ---- Relationships ----
+  \draw[arr] (uh.east) -- node[above,font=\scriptsize]{1} (-2.5, 5.35);
+  \draw[arr] (fh.west) -- node[above,font=\scriptsize]{*} (-2.5, 5.35);
+  \node[font=\scriptsize\bfseries,text=hitblue] at (-2.75, 5.6) {owns};
+
+  \draw[arr] (fh.east) -- node[above,font=\scriptsize]{1} (3.5, 5.35);
+  \draw[arr] (ah.west) -- node[above,font=\scriptsize]{*} (3.5, 5.35);
+  \node[font=\scriptsize\bfseries,text=hitblue] at (3.25, 5.6) {has};
+
+\end{tikzpicture}%
+}
+\end{figure}
+
+\subsection{Data Dictionary}
+
+The following tables define the fields, data types, and constraints for each entity in the database.
+
+\noindent\textbf{USER (Farmer account records)}
+
+\begin{longtable}{>{\bfseries}p{3.0cm} p{2.2cm} p{5.5cm} p{2.5cm}}
+\toprule
+Field & Data Type & Description & Constraints \\
+\midrule
+\endfirsthead
+\toprule
+Field & Data Type & Description & Constraints \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+id         & TEXT     & Unique identifier for the user account, auto-generated using \texttt{cuid()} & PK, unique, not null \\[3pt]
+name       & TEXT     & Farmer's full name as entered during registration & not null \\[3pt]
+email      & TEXT     & Farmer's email address, used for login & unique, not null \\[3pt]
+password   & TEXT     & bcrypt hash of the user's password, work factor 12 & not null \\[3pt]
+createdAt  & DATETIME & Timestamp of account creation, set automatically & not null \\[3pt]
+\end{longtable}
+
+\vspace{0.5em}
+\noindent\textbf{FIELD (Tobacco field records)}
+
+\begin{longtable}{>{\bfseries}p{3.0cm} p{2.2cm} p{5.5cm} p{2.5cm}}
+\toprule
+Field & Data Type & Description & Constraints \\
+\midrule
+\endfirsthead
+\toprule
+Field & Data Type & Description & Constraints \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+id         & TEXT     & Unique identifier for the field record & PK, unique, not null \\[3pt]
+name       & TEXT     & Field name as entered by the farmer & not null \\[3pt]
+cropType   & TEXT     & Crop grown in the field; defaults to \texttt{Tobacco} & default: Tobacco \\[3pt]
+polygon    & TEXT     & GeoJSON representation of the drawn field boundary & not null \\[3pt]
+area       & REAL     & Calculated field area in hectares using Shoelace formula & nullable \\[3pt]
+location   & TEXT     & Reverse-geocoded place name from field centroid & nullable \\[3pt]
+userId     & TEXT     & Reference to the owning user's account & FK $\rightarrow$ USER.id \\[3pt]
+createdAt  & DATETIME & Timestamp of field record creation & not null \\[3pt]
+\end{longtable}
+
+\vspace{0.5em}
+\noindent\textbf{ANALYSIS (Crop health analysis records)}
+
+\begin{longtable}{>{\bfseries}p{3.2cm} p{2.0cm} p{5.5cm} p{2.5cm}}
+\toprule
+Field & Data Type & Description & Constraints \\
+\midrule
+\endfirsthead
+\toprule
+Field & Data Type & Description & Constraints \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+id              & TEXT     & Unique identifier for the analysis run & PK, unique, not null \\[3pt]
+fieldId         & TEXT     & Reference to the analysed field & FK $\rightarrow$ FIELD.id \\[3pt]
+meanNDVI        & REAL     & Mean NDVI across all cloud-free pixels in the analysis window & not null \\[3pt]
+ndviTrend       & ENUM     & Temporal NDVI trajectory: IMPROVING, STABLE, or DECLINING & not null \\[3pt]
+healthStatus    & ENUM     & ML classifier output: HEALTHY, MODERATE\_STRESS, or HIGH\_STRESS & not null \\[3pt]
+avgTemperature  & REAL     & Average daily temperature ($^{\circ}$C) over the analysis window & not null \\[3pt]
+totalRainfall   & REAL     & Cumulative precipitation (mm) over the analysis window & not null \\[3pt]
+waterStressRisk & BOOL     & True if rainfall $<$ 10\,mm AND mean NDVI $<$ 0.45 & not null \\[3pt]
+diseaseRisk     & BOOL     & True if NDVI spatial variance $>$ 0.05 & not null \\[3pt]
+rawData         & TEXT     & JSON string storing raw feature values and data source metadata & not null \\[3pt]
+recommendations & TEXT     & JSON array of plain-language recommendation strings & not null \\[3pt]
+heatmapData     & TEXT     & JSON array of \texttt{[lat, lng, ndvi]} triples for heatmap rendering & nullable \\[3pt]
+createdAt       & DATETIME & Timestamp of analysis run & not null \\[3pt]
+\end{longtable}
+
+\subsection{Database Schema}
+
+The Prisma schema below defines all three models, the two enumerations, and the relationship constraints. The complete schema file is reproduced in full in Appendix~\ref{app:schema}.
+
+\begin{lstlisting}[language=SQL, caption={Prisma schema -- core models (abridged)}, label={lst:schema}]
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  fields    Field[]
+  createdAt DateTime @default(now())
+}
+
+model Field {
+  id        String     @id @default(cuid())
+  name      String
+  cropType  String     @default("Tobacco")
+  polygon   String     // GeoJSON stored as JSON string
+  area      Float?
+  location  String?
+  userId    String
+  user      User       @relation(fields: [userId], references: [id])
+  analyses  Analysis[]
+  createdAt DateTime   @default(now())
+}
+
+model Analysis {
+  id              String       @id @default(cuid())
+  fieldId         String
+  field           Field        @relation(fields: [fieldId], references: [id])
+  meanNDVI        Float
+  ndviTrend       NDVITrend
+  healthStatus    HealthStatus
+  avgTemperature  Float
+  totalRainfall   Float
+  waterStressRisk Boolean
+  diseaseRisk     Boolean
+  rawData         String
+  recommendations String
+  heatmapData     String?
+  createdAt       DateTime     @default(now())
+}
+
+enum NDVITrend    { IMPROVING  STABLE  DECLINING }
+enum HealthStatus { HEALTHY  MODERATE_STRESS  HIGH_STRESS }
+\end{lstlisting}
+
+\section{Algorithm Design}
+
+The analysis algorithm converts a GeoJSON polygon into a health classification and a set of farming recommendations through a six-step pipeline: ingest and validate $\rightarrow$ satellite and weather retrieval $\rightarrow$ feature engineering $\rightarrow$ ML inference $\rightarrow$ post-processing and risk flagging $\rightarrow$ storage and response. Each step is described below. \citep{liakos2018}
+
+\subsection{Inputs to the Algorithm}
+
+\begin{itemize}
+  \item The algorithm receives a field record containing:
+    \begin{itemize}
+      \item[-] The GeoJSON polygon geometry (a \texttt{FeatureCollection} wrapping a single \texttt{Polygon} feature).
+      \item[-] The \texttt{fieldId} (used to verify ownership and store results).
+      \item[-] The authenticated user's session identifier.
+    \end{itemize}
+  \item Derived from the polygon during the analysis run:
+    \begin{itemize}
+      \item[-] Sentinel-2 Level-2A per-pixel NDVI values over a 30-day window, drawn from the \texttt{COPERNICUS/S2\_SR\_HARMONIZED} GEE collection.
+      \item[-] Daily temperature and precipitation for the same window from Open-Meteo.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Pre-processing and Validation}
+
+\begin{itemize}
+  \item \textbf{Request validation}
+    \begin{itemize}
+      \item[-] The session cookie is checked. If absent or invalid, the request is rejected with HTTP~401 before any computation begins.
+      \item[-] The field record is fetched from the database filtering on both \texttt{fieldId} and \texttt{userId}. A record that doesn't belong to the authenticated user returns HTTP~404 rather than HTTP~403, to avoid confirming the existence of other users' fields.
+    \end{itemize}
+  \item \textbf{Polygon parsing}
+    \begin{itemize}
+      \item[-] The stored polygon JSON string is parsed. If parsing fails, the request is rejected. The polygon coordinates are extracted and validated for minimum vertex count (at least 4, including the closing coordinate) before being submitted to GEE.
+    \end{itemize}
+  \item \textbf{Satellite data quality}
+    \begin{itemize}
+      \item[-] GEE scenes are filtered to cloud cover below 20\%. If fewer than two qualifying scenes exist in the 30-day window, the lookback is extended to 60 days. If still insufficient, the analysis proceeds with a data quality flag in the raw data JSON.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Feature Engineering}
+
+The five features used by the logistic regression model are engineered from the raw satellite and weather observations as follows.
+
+\begin{itemize}
+  \item \textbf{Mean NDVI} (\texttt{mean\_ndvi}): The arithmetic mean of all per-pixel NDVI values across all qualifying scenes in the analysis window. Pixels with NDVI below $-$0.1 (water, shadow) are excluded from the mean computation.
+
+  \item \textbf{NDVI trend slope} (\texttt{ndvi\_trend}): A linear regression slope fitted to the sequence of per-scene mean NDVI values ordered by acquisition date. A positive slope indicates improving vegetation; a negative slope indicates decline. The slope is classified as \texttt{IMPROVING} if $> 0$, \texttt{DECLINING} if $< -0.01$, and \texttt{STABLE} otherwise. \citep{weiss2020}
+
+  \item \textbf{NDVI variance} (\texttt{ndvi\_variance}): The spatial variance of per-pixel NDVI values within the field polygon, computed from the pixel distribution in the most recent cloud-free scene. High variance indicates irregular within-field vegetation patterns, which may indicate patchy disease, pest damage, or waterlogging in isolated zones. \citep{nyoka2020}
+
+  \item \textbf{Average temperature} (\texttt{avg\_temperature\_c}): Mean of daily maximum temperatures over the analysis window from Open-Meteo.
+
+  \item \textbf{Total rainfall} (\texttt{total\_rainfall\_mm}): Sum of daily precipitation over the same window.
+\end{itemize}
+
+\subsection{Model Selection and Responsibilities}
+
+A multinomial logistic regression classifier is used for the three-class crop health problem. The choice was informed by \citet{liakos2018}, who reviewed forty machine learning studies in agriculture and found that logistic regression frequently matches more complex models when features are well-engineered and class boundaries are reasonably stable. The key advantages here are interpretability — the coefficient magnitudes show which features most influence each class — and deterministic inference, since there is no randomness in the forward pass at prediction time.
+
+\begin{itemize}
+  \item \textbf{Responsibility 1 -- Health classification}: Assigns the field to \texttt{HEALTHY}, \texttt{MODERATE\_STRESS}, or \texttt{HIGH\_STRESS} from the five-feature vector.
+  \item \textbf{Responsibility 2 -- Risk flagging}: Two binary flags are derived separately from the raw features using threshold rules. \texttt{waterStressRisk} fires when \texttt{totalRainfall} $<$ 10\,mm and \texttt{meanNDVI} $<$ 0.45. \texttt{diseaseRisk} fires when \texttt{ndviVariance} $>$ 0.05.
+  \item \textbf{Responsibility 3 -- Trend tracking}: The NDVI trend direction is stored alongside the health status as a secondary indicator for longitudinal review.
+\end{itemize}
+
+\subsection{Inference and Post-processing Logic}
+
+\begin{enumerate}
+  \item \textbf{Score computation}: For each class $j$, a linear score is computed: $z_j = \mathbf{w}_j \cdot \mathbf{x} + b_j$, where $\mathbf{w}_j$ is the row of coefficients for class $j$, $\mathbf{x}$ is the feature vector, and $b_j$ is the class intercept.
+  \item \textbf{Class selection}: The class with the highest score is selected as the prediction: $\hat{y} = \arg\max_j(z_j)$.
+  \item \textbf{Recommendation generation}: The four recommendation rules are evaluated independently:
+    \begin{itemize}
+      \item[-] \textbf{R1 -- Water stress}: NDVI $<$ 0.45 and rainfall $<$ 10\,mm $\rightarrow$ irrigation recommended.
+      \item[-] \textbf{R2 -- Declining moderate}: trend = DECLINING and $0.45 \leq$ NDVI $\leq 0.60$ $\rightarrow$ monitor closely.
+      \item[-] \textbf{R3 -- Stable healthy}: NDVI $> 0.60$ and trend = STABLE or IMPROVING $\rightarrow$ no action required.
+      \item[-] \textbf{R4 -- Disease signal}: variance $> 0.05$ and temperature $> 25\,^{\circ}$C $\rightarrow$ inspect for disease or pests.
+    \end{itemize}
+  \item \textbf{Heatmap generation}: The retained per-pixel NDVI grid is converted to a list of \texttt{[lat, lng, intensity]} triples, where intensity $= 1 - \text{normalised NDVI}$ (so that red corresponds to low NDVI / high stress, and green to high NDVI / healthy). Pixels are sampled at fixed intervals to keep the payload manageable.
+\end{enumerate}
+
+\subsection{Algorithm Pseudocode}
+
+\begin{verbatim}
+Receive analysis request with fieldId and session cookie
+Validate session cookie and ownership of fieldId
+Retrieve field polygon from database
+Parse GeoJSON polygon and extract coordinate array
+Submit polygon to Google Earth Engine
+  Filter COPERNICUS/S2_SR_HARMONIZED by polygon and 30-day window
+  Apply QA60 cloud mask (< 20% cloud cover)
+  Compute per-pixel NDVI = (B8 - B4) / (B8 + B4)
+  Return NDVI time-series and spatial pixel grid
+In parallel, request weather data from Open-Meteo
+  For field centroid coordinates over same 30-day window
+  Return daily temperature and precipitation
+Compute engineered features:
+  mean_ndvi       = mean of all qualifying pixels
+  ndvi_trend      = linear regression slope over time-series
+  ndvi_variance   = spatial variance of pixel distribution
+  avg_temperature = mean of daily maximum temperatures
+  total_rainfall  = sum of daily precipitation
+Load JSON model weights (coefficients + intercepts)
+For each class: compute z = dot(weights[j], features) + bias[j]
+Select class with highest z as health status
+Evaluate four recommendation rules against features and status
+Generate heatmap point array from pixel grid
+Write complete analysis record to database
+Return response to browser (status, features, recommendations, heatmap)
+\end{verbatim}
+
+\section{Interface Design}
+
+The interface was designed around one principle: the primary output of any page should be readable in under three seconds, without scrolling, by a farmer with basic digital literacy. That constraint pushed towards large, colour-coded status indicators, minimal text on the primary views, and details moved into expandable sections for users who want them. \citet{rose2016}
+
+\subsection{Login and Registration Interface}
+
+The Login and Sign-Up pages are deliberately simple. The farmer's task here is purely credential entry — the design should not distract from that with navigation or secondary content.
+
+\begin{figure}[H]
+\centering
+\caption{Wireframe --- Login Page}
+\label{fig:wf_login}
+\begin{tikzpicture}[scale=0.9]
+  % Outer frame
+  \draw[draw=gray!60,fill=gray!8,rounded corners=4pt] (0,0) rectangle (12,9);
+  % Top nav bar
+  \draw[fill=white,draw=gray!30] (0,8.2) rectangle (12,9);
+  \node[font=\small\bfseries,text=darkgreen] at (1.8,8.6) {TobaccoGuard};
+
+  % Login card
+  \draw[fill=white,draw=gray!40,rounded corners=4pt] (2.5,1.0) rectangle (9.5,7.8);
+
+  % Card heading
+  \node[font=\normalsize\bfseries] at (6,7.3) {Sign in to your account};
+  \node[font=\scriptsize,text=gray] at (6,6.9) {Monitor your tobacco fields with satellite data};
+
+  % Email label + field
+  \node[font=\small,anchor=west] at (2.9,6.4) {Email address};
+  \draw[fill=gray!10,draw=gray!50,rounded corners=2pt] (2.9,5.8) rectangle (9.1,6.2);
+  \node[font=\scriptsize,text=gray,anchor=west] at (3.1,6.0) {you@example.com};
+
+  % Password label + field
+  \node[font=\small,anchor=west] at (2.9,5.4) {Password};
+  \draw[fill=gray!10,draw=gray!50,rounded corners=2pt] (2.9,4.8) rectangle (9.1,5.2);
+  \node[font=\scriptsize,text=gray,anchor=west] at (3.1,5.0) {\textbullet\textbullet\textbullet\textbullet\textbullet\textbullet\textbullet\textbullet};
+
+  % Sign in button
+  \draw[fill=darkgreen,draw=none,rounded corners=3pt] (2.9,4.1) rectangle (9.1,4.55);
+  \node[font=\small\bfseries,text=white] at (6,4.32) {Sign In};
+
+  % Register link
+  \node[font=\scriptsize,text=gray!70] at (6,3.7) {Don't have an account?\ \ \underline{Create one here}};
+
+  % Footer note
+  \node[font=\scriptsize,text=gray!50] at (6,1.4) {Free to use \textbullet\ No subscription fees \textbullet\ Powered by Google Earth Engine};
+\end{tikzpicture}
+\end{figure}
+
+\subsection{Dashboard Interface}
+
+The Dashboard is the farmer's landing page after login. Its purpose is to surface the health status of every field at a glance, with a clear path to trigger a new analysis or view prior results.
+
+\begin{figure}[H]
+\centering
+\caption{Wireframe --- Dashboard (Field List View)}
+\label{fig:wf_dash}
+\begin{tikzpicture}[scale=0.9]
+  % Outer frame
+  \draw[draw=gray!60,fill=gray!8,rounded corners=4pt] (0,0) rectangle (14,10);
+
+  % Top nav
+  \draw[fill=white,draw=gray!30] (0,9.2) rectangle (14,10);
+  \node[font=\small\bfseries,text=darkgreen,anchor=west] at (0.4,9.6) {TobaccoGuard};
+  \draw[fill=darkgreen,draw=none,rounded corners=2pt] (10.5,9.3) rectangle (12.3,9.8);
+  \node[font=\scriptsize\bfseries,text=white] at (11.4,9.55) {+ New Field};
+  \draw[fill=gray!20,draw=gray!50,rounded corners=2pt] (12.5,9.3) rectangle (13.6,9.8);
+  \node[font=\scriptsize] at (13.05,9.55) {User $\vee$};
+
+  % Page heading
+  \node[font=\large\bfseries,anchor=west] at (0.5,8.7) {Your Fields};
+  \node[font=\scriptsize,text=gray,anchor=west] at (0.5,8.35) {3 fields registered};
+
+  % Card 1 - HEALTHY
+  \draw[fill=white,draw=gray!40,rounded corners=3pt] (0.5,5.5) rectangle (6.5,8.0);
+  \node[font=\small\bfseries,anchor=west] at (0.8,7.65) {Chipinge Block A};
+  \node[font=\scriptsize,text=gray,anchor=west] at (0.8,7.3) {2.4 ha\ \ |\ \ Chipinge District};
+  \draw[fill=green!20,draw=green!60,rounded corners=2pt] (0.8,6.85) rectangle (2.7,7.15);
+  \node[font=\scriptsize\bfseries,text=darkgreen] at (1.75,7.0) {\textbullet\ HEALTHY};
+  \node[font=\tiny,text=gray,anchor=west] at (0.8,6.55) {Last analysed: 3 days ago};
+  \draw[fill=hitblue!10,draw=hitblue!50,rounded corners=2pt] (0.8,5.8) rectangle (3.0,6.2);
+  \node[font=\scriptsize,text=hitblue] at (1.9,6.0) {Analyse Field};
+  \draw[fill=gray!10,draw=gray!40,rounded corners=2pt] (3.2,5.8) rectangle (5.0,6.2);
+  \node[font=\scriptsize,text=gray] at (4.1,6.0) {View Map};
+
+  % Card 2 - MODERATE STRESS
+  \draw[fill=white,draw=gray!40,rounded corners=3pt] (7.0,5.5) rectangle (13.5,8.0);
+  \node[font=\small\bfseries,anchor=west] at (7.3,7.65) {Mvurwi North Block};
+  \node[font=\scriptsize,text=gray,anchor=west] at (7.3,7.3) {1.8 ha\ \ |\ \ Bindura District};
+  \draw[fill=amber!25,draw=amber!70,rounded corners=2pt] (7.3,6.85) rectangle (10.3,7.15);
+  \node[font=\scriptsize\bfseries,text=amber] at (8.8,7.0) {\textbullet\ MODERATE STRESS};
+  \node[font=\tiny,text=gray,anchor=west] at (7.3,6.55) {Last analysed: 1 week ago};
+  \draw[fill=hitblue!10,draw=hitblue!50,rounded corners=2pt] (7.3,5.8) rectangle (9.5,6.2);
+  \node[font=\scriptsize,text=hitblue] at (8.4,6.0) {Analyse Field};
+  \draw[fill=gray!10,draw=gray!40,rounded corners=2pt] (9.7,5.8) rectangle (11.5,6.2);
+  \node[font=\scriptsize,text=gray] at (10.6,6.0) {View Map};
+
+  % Card 3 - HIGH STRESS
+  \draw[fill=white,draw=gray!40,rounded corners=3pt] (0.5,2.5) rectangle (6.5,5.0);
+  \node[font=\small\bfseries,anchor=west] at (0.8,4.65) {Rusape South};
+  \node[font=\scriptsize,text=gray,anchor=west] at (0.8,4.3) {3.1 ha\ \ |\ \ Rusape District};
+  \draw[fill=red!15,draw=red!50,rounded corners=2pt] (0.8,3.85) rectangle (2.9,4.15);
+  \node[font=\scriptsize\bfseries,text=firebrick] at (1.85,4.0) {\textbullet\ HIGH STRESS};
+  \node[font=\tiny,text=gray,anchor=west] at (0.8,3.55) {Last analysed: 2 days ago};
+  \draw[fill=hitblue!10,draw=hitblue!50,rounded corners=2pt] (0.8,2.8) rectangle (3.0,3.2);
+  \node[font=\scriptsize,text=hitblue] at (1.9,3.0) {Analyse Field};
+  \draw[fill=gray!10,draw=gray!40,rounded corners=2pt] (3.2,2.8) rectangle (5.0,3.2);
+  \node[font=\scriptsize,text=gray] at (4.1,3.0) {View Map};
+
+  % Footer
+  \node[font=\tiny,text=gray!50] at (7,0.3) {TobaccoGuard\ \ |\ \ Satellite-Based Crop Health Monitoring\ \ |\ \ Harare Institute of Technology};
+\end{tikzpicture}
+\end{figure}
+
+\subsection{Create Field Interface}
+
+The Create Field page uses a split layout: a form panel on the left and an interactive satellite map on the right. The map occupies most of the viewport so that drawing a polygon over recognisable aerial imagery is as natural as possible.
+
+\begin{figure}[H]
+\centering
+\caption{Wireframe --- Create Field (Interactive Map View)}
+\label{fig:wf_create}
+\begin{tikzpicture}[scale=0.88]
+  % Outer frame
+  \draw[draw=gray!60,fill=gray!8,rounded corners=4pt] (0,0) rectangle (16,10.5);
+
+  % Nav bar
+  \draw[fill=white,draw=gray!30] (0,9.8) rectangle (16,10.5);
+  \draw[fill=gray!20,draw=gray!50,rounded corners=2pt] (0.3,9.9) rectangle (1.0,10.3);
+  \node[font=\scriptsize] at (0.65,10.1) {$\leftarrow$};
+  \node[font=\small\bfseries,text=darkgreen] at (3.0,10.1) {TobaccoGuard\ \ |\ \ Create New Field};
+
+  % Left panel (form)
+  \draw[fill=white,draw=gray!30] (0,0) rectangle (4.5,9.8);
+
+  \node[font=\small\bfseries,anchor=west] at (0.3,9.4) {Field Details};
+  \node[font=\scriptsize,anchor=west] at (0.3,9.05) {Field Name};
+  \draw[fill=gray!10,draw=gray!50,rounded corners=2pt] (0.3,8.5) rectangle (4.2,8.85);
+
+  \node[font=\scriptsize\bfseries,anchor=west,text=hitblue] at (0.3,8.1) {Drawing Instructions};
+  \node[font=\tiny,text=gray,anchor=west] at (0.3,7.75) {1.\ Click the polygon tool (top right of map)};
+  \node[font=\tiny,text=gray,anchor=west] at (0.3,7.45) {2.\ Click around your field boundary};
+  \node[font=\tiny,text=gray,anchor=west] at (0.3,7.15) {3.\ Click the first point to close the shape};
+  \node[font=\tiny,text=gray,anchor=west] at (0.3,6.85) {4.\ Edit or redraw as needed};
+  \node[font=\tiny,text=gray,anchor=west] at (0.3,6.55) {5.\ Click Save Field below};
+
+  % Location search
+  \node[font=\scriptsize,anchor=west] at (0.3,6.05) {Navigate to location};
+  \draw[fill=gray!10,draw=gray!50,rounded corners=2pt] (0.3,5.5) rectangle (3.5,5.85);
+  \draw[fill=hitblue!20,draw=hitblue!50,rounded corners=2pt] (3.6,5.5) rectangle (4.2,5.85);
+  \node[font=\tiny,text=hitblue] at (3.9,5.67) {Go};
+
+  % Computed info
+  \draw[fill=gray!5,draw=gray!30,rounded corners=2pt] (0.3,4.5) rectangle (4.2,5.3);
+  \node[font=\scriptsize,anchor=west] at (0.5,5.05) {Computed Area};
+  \node[font=\small\bfseries,text=hitblue,anchor=west] at (0.5,4.7) {-- ha};
+
+  % Save button
+  \draw[fill=darkgreen,draw=none,rounded corners=3pt] (0.3,3.8) rectangle (4.2,4.25);
+  \node[font=\small\bfseries,text=white] at (2.25,4.02) {Save Field};
+
+  % Cancel link
+  \node[font=\scriptsize,text=gray] at (2.25,3.45) {\underline{Cancel}};
+
+  % Right panel (map)
+  \draw[fill=green!8,draw=gray!40] (4.5,0) rectangle (16,9.8);
+  \node[font=\small,text=gray] at (10.25,5.0) {Satellite Basemap (ESRI World Imagery)};
+
+  % Simulate a field polygon
+  \draw[draw=darkgreen,fill=darkgreen!20,thick] (7,3) -- (12,3.5) -- (13,7) -- (8,6.5) -- (7,3);
+
+  % Polygon tool button (top right of map)
+  \draw[fill=white,draw=gray!50,rounded corners=2pt] (14.5,9.2) rectangle (15.8,9.65);
+  \node[font=\tiny] at (15.15,9.42) {Draw Polygon};
+
+  % Coordinates popup
+  \draw[fill=white,draw=gray!50,rounded corners=2pt] (5.0,8.9) rectangle (8.5,9.65);
+  \node[font=\tiny,anchor=west] at (5.2,9.42) {Lat: $-$17.8300};
+  \node[font=\tiny,anchor=west] at (5.2,9.1)  {Lng:\ \ 31.0500};
+\end{tikzpicture}
+\end{figure}
+
+\subsection{Analysis Results Interface}
+
+The Analysis Results page is the primary output surface of the system. It is designed to present the most important information — the health status and the recommended actions — without requiring the farmer to scroll or navigate further.
+
+\begin{figure}[H]
+\centering
+\caption{Wireframe --- Analysis Results Page}
+\label{fig:wf_results}
+\begin{tikzpicture}[scale=0.85]
+  % Outer frame
+  \draw[draw=gray!60,fill=gray!8,rounded corners=4pt] (0,0) rectangle (16,14);
+
+  % Nav bar
+  \draw[fill=white,draw=gray!30] (0,13.2) rectangle (16,14);
+  \draw[fill=gray!20,draw=gray!50,rounded corners=2pt] (0.3,13.3) rectangle (1.0,13.7);
+  \node[font=\scriptsize] at (0.65,13.5) {$\leftarrow$};
+  \node[font=\small\bfseries,text=darkgreen] at (3.5,13.5) {TobaccoGuard\ \ |\ \ Analysis Results};
+  \node[font=\tiny,text=gray] at (13.0,13.5) {LAST UPDATED: 01 May 2025};
+
+  % Health status section
+  \draw[fill=white,draw=gray!20,rounded corners=4pt] (3,11.5) rectangle (13,13.0);
+  \draw[fill=amber!20,draw=amber!60,rounded corners=3pt] (5.5,12.4) rectangle (10.5,12.85);
+  \node[font=\small\bfseries,text=amber] at (8,12.62) {$\triangle$\ \ Moderate Stress\ \ $\circ$};
+  \node[font=\large\bfseries] at (8,11.9) {Overall Crop Health is \textcolor{amber}{\textbf{MODERATE STRESS}}};
+  \node[font=\scriptsize,text=gray] at (8,11.6) {Based on the latest satellite imagery and weather data for your field.};
+
+  % Recommendations section
+  \node[font=\small\bfseries,anchor=west] at (0.5,11.1) {Smart Recommendations};
+  \draw[fill=white,draw=green!50,rounded corners=2pt] (0.5,10.35) rectangle (15.5,10.85);
+  \node[font=\scriptsize,anchor=west] at (0.8,10.6) {\checkmark\ \ Monitor field closely for early signs of stress or disease};
+  \draw[fill=white,draw=green!50,rounded corners=2pt] (0.5,9.65) rectangle (15.5,10.15);
+  \node[font=\scriptsize,anchor=west] at (0.8,9.9) {\checkmark\ \ Inspect field for possible disease or pest activity due to irregular vegetation patterns};
+
+  % Two columns: Risk + Environment
+  \draw[fill=white,draw=gray!30,rounded corners=3pt] (0.5,7.3) rectangle (7.5,9.3);
+  \node[font=\small\bfseries,anchor=west] at (0.8,9.0) {Risk Assessment};
+  \draw[gray!20] (0.5,8.55) -- (7.5,8.55);
+  \node[font=\scriptsize,anchor=west] at (0.8,8.3) {\textcolor{blue}{$\sim$}\ Water Stress};
+  \draw[fill=gray!20,draw=gray!40,rounded corners=2pt] (5.8,8.1) rectangle (7.2,8.5);
+  \node[font=\tiny] at (6.5,8.3) {Low Risk};
+  \node[font=\scriptsize,anchor=west] at (0.8,7.65) {\textcolor{red}{!}\ Disease Risk};
+  \draw[fill=amber!20,draw=amber!50,rounded corners=2pt] (5.8,7.45) rectangle (7.2,7.85);
+  \node[font=\tiny,text=amber] at (6.5,7.65) {Moderate Risk};
+
+  \draw[fill=white,draw=gray!30,rounded corners=3pt] (8.0,7.3) rectangle (15.5,9.3);
+  \node[font=\small\bfseries,anchor=west] at (8.3,9.0) {Environment};
+  \draw[fill=gray!5,draw=gray!30,rounded corners=2pt] (8.3,7.6) rectangle (11.5,8.7);
+  \node[font=\scriptsize,text=gray] at (9.9,8.45) {Avg Temperature};
+  \node[font=\large\bfseries,text=amber] at (9.9,8.0) {26.4\,$^{\circ}$C};
+  \draw[fill=gray!5,draw=gray!30,rounded corners=2pt] (11.8,7.6) rectangle (15.2,8.7);
+  \node[font=\scriptsize,text=gray] at (13.5,8.45) {Total Rainfall};
+  \node[font=\large\bfseries,text=hitblue] at (13.5,8.0) {18.2\,mm};
+
+  % NDVI Heatmap section
+  \draw[fill=white,draw=gray!30,rounded corners=3pt] (0.5,3.8) rectangle (7.5,7.0);
+  \node[font=\small\bfseries,anchor=west] at (0.8,6.7) {NDVI Stress Heatmap};
+  % Simulate map with heatmap overlay
+  \draw[fill=green!10] (0.5,3.8) rectangle (7.5,6.45);
+  \draw[fill=green!40,opacity=0.6] (1.5,4.5) .. controls (3,5.5) .. (5,5.0) .. controls (6,4.8) .. (6.5,5.5) -- (6.5,4.0) -- (1.5,4.0) -- cycle;
+  \draw[fill=amber!50,opacity=0.7] (2.5,5.2) circle (0.6);
+  \draw[fill=red!60,opacity=0.7] (5.5,4.5) circle (0.4);
+  % Legend
+  \node[font=\tiny,anchor=west] at (0.7,3.95) {\textcolor{darkgreen}{$\blacksquare$} Healthy\ \ \textcolor{amber}{$\blacksquare$} Moderate\ \ \textcolor{firebrick}{$\blacksquare$} Stressed};
+
+  % NDVI History chart section
+  \draw[fill=white,draw=gray!30,rounded corners=3pt] (8.0,3.8) rectangle (15.5,7.0);
+  \node[font=\small\bfseries,anchor=west] at (8.3,6.7) {NDVI History};
+  \node[font=\scriptsize,text=gray,anchor=east] at (15.3,6.7) {Mean NDVI: \textbf{0.52}};
+  % Simulate area chart
+  \draw[fill=green!15] (8.5,4.2) -- (9.5,4.7) -- (10.8,5.3) -- (12.0,5.0) -- (13.2,4.8) -- (14.5,4.5) -- (14.5,4.0) -- (8.5,4.0) -- cycle;
+  \draw[draw=darkgreen,thick] (8.5,4.2) -- (9.5,4.7) -- (10.8,5.3) -- (12.0,5.0) -- (13.2,4.8) -- (14.5,4.5);
+  \draw[dotted,gray!50] (8.5,4.8) -- (14.5,4.8);
+  \node[font=\tiny,text=gray,anchor=east] at (8.4,4.8) {0.5};
+  \node[font=\tiny,text=gray] at (9.5,3.9) {Day $-$12};
+  \node[font=\tiny,text=gray] at (14.5,3.9) {Latest};
+
+  % Return button
+  \draw[fill=gray!10,draw=gray!40,rounded corners=2pt] (6.3,1.2) rectangle (9.7,1.7);
+  \node[font=\scriptsize,text=gray] at (8,1.45) {Return to Dashboard};
+\end{tikzpicture}
+\end{figure}
+
+\section{Conclusion}
+
+The design stage produced a complete specification of the system before a line of implementation code was committed. The four-layer modular architecture separates satellite data retrieval, backend coordination, machine learning intelligence, and browser presentation into components that can be built, tested, and updated independently. The database design supports both the operational and longitudinal requirements of the system through three clearly related entities. The algorithm design provides a step-by-step pathway from field polygon to health classification and spatial heatmap. And the wireframes translate the functional requirements into concrete page layouts that prioritise the farmer's primary information needs. Chapter~6 takes these design decisions and records how each one was realised in working code.
+
