@@ -134,6 +134,9 @@ importers:
       leaflet-draw:
         specifier: ^1.0.4
         version: 1.0.4
+      leaflet.heat:
+        specifier: ^0.2.0
+        version: 0.2.0
       lucide-react:
         specifier: ^0.562.0
         version: 0.562.0(react@19.2.1)
@@ -2970,6 +2973,9 @@ packages:
 
   leaflet-draw@1.0.4:
     resolution: {integrity: sha512-rsQ6saQO5ST5Aj6XRFylr5zvarWgzWnrg46zQ1MEOEIHsppdC/8hnN8qMoFvACsPvTioAuysya/TVtog15tyAQ==}
+
+  leaflet.heat@0.2.0:
+    resolution: {integrity: sha512-Cd5PbAA/rX3X3XKxfDoUGi9qp78FyhWYurFg3nsfhntcM/MCNK08pRkf4iEenO1KNqwVPKCmkyktjW3UD+h9bQ==}
 
   leaflet@1.9.4:
     resolution: {integrity: sha512-nxS1ynzJOmOlHp+iL3FyWqK89GtNL8U8rvlMOsQdTTssxZwCXh8N2NB3GDQOL+YR3XnWyZAxwQixURb+FA74PA==}
@@ -7116,6 +7122,8 @@ snapshots:
       language-subtag-registry: 0.3.23
 
   leaflet-draw@1.0.4: {}
+
+  leaflet.heat@0.2.0: {}
 
   leaflet@1.9.4: {}
 

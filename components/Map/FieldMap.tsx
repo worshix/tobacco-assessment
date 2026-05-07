@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { Loader2 } from 'lucide-react';
+import { HeatmapPoint } from './HeatmapLayer';
 
 interface FieldMapProps {
   initialViewState?: {
@@ -14,6 +15,7 @@ interface FieldMapProps {
   onPolygonCreated?: (polygon: any) => void;
   editable?: boolean;
   goToLocation?: { lat: number; lng: number } | null;
+  heatmapData?: HeatmapPoint[];
 }
 
 // Dynamic import to avoid SSR issues with Leaflet

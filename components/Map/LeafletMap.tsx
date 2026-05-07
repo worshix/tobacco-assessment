@@ -6,6 +6,7 @@ import { EditControl } from 'react-leaflet-draw';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
+import HeatmapLayer, { HeatmapPoint } from './HeatmapLayer';
 
 // Fix Leaflet default marker icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -25,7 +26,8 @@ interface LeafletMapProps {
   children?: React.ReactNode;
   onPolygonCreated?: (polygon: any) => void;
   editable?: boolean;
-  goToLocation?: { lat: number; lng: number } | null;
+  goToLocation?: { lat: number; lng: number } | null | undefined;
+  heatmapData?: HeatmapPoint[];
 }
 
 function MapUpdater({ center, zoom }: { center: [number, number]; zoom: number }) {
@@ -36,7 +38,7 @@ function MapUpdater({ center, zoom }: { center: [number, number]; zoom: number }
   return null;
 }
 
-function GoToLocationHandler({ location }: { location: { lat: number; lng: number } | null }) {
+function GoToLocationHandler({ location }: { location: { lat: number; lng: number } | null | undefined }) {
   const map = useMap();
   useEffect(() => {
     if (location) {
@@ -48,13 +50,14 @@ function GoToLocationHandler({ location }: { location: { lat: number; lng: numbe
   return null;
 }
 
-export default function LeafletMap({ 
-  initialViewState, 
-  polygon, 
-  children, 
+export default function LeafletMap({
+  initialViewState,
+  polygon,
+  children,
   onPolygonCreated,
   editable = false,
-  goToLocation 
+  goToLocation,
+  heatmapData,
 }: LeafletMapProps) {
   const featureGroupRef = useRef<L.FeatureGroup>(null);
 
@@ -144,6 +147,10 @@ export default function LeafletMap({
               fillOpacity: 0.4,
             }}
           />
+        )}
+
+        {heatmapData && heatmapData.length > 0 && (
+          <HeatmapLayer points={heatmapData} />
         )}
 
         {children}

@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Leaf, Plus, Activity, Calendar, MapPin } from "lucide-react";
+import { Leaf, Plus, Activity, Calendar, MapPin, AlertTriangle } from "lucide-react";
 import { LogoutButton } from "@/components/LogoutButton";
 
 export default async function DashboardPage() {
@@ -24,6 +24,7 @@ export default async function DashboardPage() {
           analyses: {
             orderBy: { createdAt: "desc" },
             take: 1,
+            select: { healthStatus: true, ndviTrend: true, createdAt: true },
           },
         },
       },
@@ -42,8 +43,11 @@ export default async function DashboardPage() {
       location: f.location || "Unknown Location",
       lastAnalysis: lastAnalysis ? new Date(lastAnalysis.createdAt).toLocaleDateString() : "No analysis yet",
       status: lastAnalysis?.healthStatus || "UNKNOWN",
+      ndviTrend: lastAnalysis?.ndviTrend || null,
     };
   });
+
+  const decliningFields = userFields.filter((f: any) => f.ndviTrend === "DECLINING");
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
@@ -67,6 +71,24 @@ export default async function DashboardPage() {
           <LogoutButton />
         </div>
       </nav>
+
+      {decliningFields.length > 0 && (
+        <div className="bg-red-50 border-b border-red-200 px-6 py-3">
+          <div className="max-w-5xl mx-auto flex items-center gap-3">
+            <AlertTriangle className="h-5 w-5 text-red-600 shrink-0" />
+            <p className="text-sm font-semibold text-red-800">
+              Declining health detected in{" "}
+              {decliningFields.map((f: any, i: number) => (
+                <span key={f.id}>
+                  <strong>{f.name}</strong>
+                  {i < decliningFields.length - 1 ? ", " : ""}
+                </span>
+              ))}
+              {" "}— run a new analysis and inspect these fields.
+            </p>
+          </div>
+        </div>
+      )}
 
       <main className="flex-1 p-6 md:p-10 max-w-5xl mx-auto w-full">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
@@ -136,11 +158,21 @@ export default async function DashboardPage() {
                         )}
                       </div>
                       
-                      <div className="flex items-center gap-4 text-xs text-slate-500">
+                      <div className="flex items-center gap-4 text-xs text-slate-500 flex-wrap">
                         <div className="flex items-center gap-1.5">
                           <Calendar className="h-3.5 w-3.5" />
                           Last sync: {field.lastAnalysis}
                         </div>
+                        {field.ndviTrend === "DECLINING" && (
+                          <div className="flex items-center gap-1 text-red-600 font-semibold">
+                            <AlertTriangle className="h-3.5 w-3.5" /> Declining health
+                          </div>
+                        )}
+                        {field.ndviTrend === "IMPROVING" && (
+                          <div className="flex items-center gap-1 text-emerald-600 font-semibold">
+                            Trend improving
+                          </div>
+                        )}
                       </div>
                     </div>
                     

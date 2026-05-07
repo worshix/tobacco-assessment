@@ -77,6 +77,7 @@ export async function POST(req: Request) {
             variance: features.ndvi_variance,
             source: satelliteData.data_source,
             region_type: satelliteData.region_type,
+            historical_ndvi: satelliteData.historical_ndvi,
         }),
         recommendations: JSON.stringify(recommendations),
       }
@@ -89,6 +90,7 @@ export async function POST(req: Request) {
         recommendations,
         dataSource: satelliteData.data_source,
         regionType: satelliteData.region_type,
+        historicalNDVI: satelliteData.historical_ndvi,
     });
   } catch (error) {
     console.error("Analysis Error:", error);
