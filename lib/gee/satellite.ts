@@ -21,40 +21,62 @@ function daysAgo(n: number): string {
   return d.toISOString().split('T')[0];
 }
 
-// Builds a GEE REST API expression that computes mean NDVI over a polygon for a date range.
-// Returns a Number result (the mean NDVI value).
+// Builds a GEE REST API v1 value:compute expression for mean NDVI over a polygon.
+// Function names follow GEE's internal algorithm registry (differ from Python/JS convenience API):
+//   ImageCollection.load, GeometryConstructors.Polygon, Filter.greaterThanOrEquals, etc.
+// The primary object argument is always 'input', not 'collection'/'image'.
+// Date range is filtered via system:time_start ms comparisons (Filter.date is not in registry).
 function buildNDVIExpression(coordinates: number[][], startDate: string, endDate: string) {
+  const startMs = new Date(startDate).getTime();
+  const endMs = new Date(endDate).getTime();
   return {
     result: 'ndvi_value',
     values: {
       s2: {
         functionInvocationValue: {
-          functionName: 'ImageCollection',
+          functionName: 'ImageCollection.load',
           arguments: { id: { constantValue: 'COPERNICUS/S2_SR_HARMONIZED' } },
         },
       },
       region: {
         functionInvocationValue: {
-          functionName: 'Geometry.Polygon',
+          functionName: 'GeometryConstructors.Polygon',
           arguments: { coordinates: { constantValue: [coordinates] } },
         },
       },
-      by_bounds: {
+      date_start_filt: {
         functionInvocationValue: {
-          functionName: 'Collection.filterBounds',
+          functionName: 'Filter.greaterThanOrEquals',
+          arguments: {
+            leftField: { constantValue: 'system:time_start' },
+            rightValue: { constantValue: startMs },
+          },
+        },
+      },
+      date_end_filt: {
+        functionInvocationValue: {
+          functionName: 'Filter.lessThan',
+          arguments: {
+            leftField: { constantValue: 'system:time_start' },
+            rightValue: { constantValue: endMs },
+          },
+        },
+      },
+      by_start: {
+        functionInvocationValue: {
+          functionName: 'Collection.filter',
           arguments: {
             collection: { valueReference: 's2' },
-            geometry: { valueReference: 'region' },
+            filter: { valueReference: 'date_start_filt' },
           },
         },
       },
       by_date: {
         functionInvocationValue: {
-          functionName: 'Collection.filterDate',
+          functionName: 'Collection.filter',
           arguments: {
-            collection: { valueReference: 'by_bounds' },
-            start: { constantValue: startDate },
-            end: { constantValue: endDate },
+            collection: { valueReference: 'by_start' },
+            filter: { valueReference: 'date_end_filt' },
           },
         },
       },
@@ -76,18 +98,24 @@ function buildNDVIExpression(coordinates: number[][], startDate: string, endDate
           },
         },
       },
-      median: {
+      col_reducer: {
+        functionInvocationValue: { functionName: 'Reducer.mean', arguments: {} },
+      },
+      reduced: {
         functionInvocationValue: {
-          functionName: 'ImageCollection.median',
-          arguments: { imageCollection: { valueReference: 'filtered' } },
+          functionName: 'ImageCollection.reduce',
+          arguments: {
+            collection: { valueReference: 'filtered' },
+            reducer: { valueReference: 'col_reducer' },
+          },
         },
       },
       ndvi_img: {
         functionInvocationValue: {
           functionName: 'Image.normalizedDifference',
           arguments: {
-            image: { valueReference: 'median' },
-            bandNames: { constantValue: ['B8', 'B4'] },
+            input: { valueReference: 'reduced' },
+            bandNames: { constantValue: ['B8_mean', 'B4_mean'] },
           },
         },
       },
@@ -245,12 +273,10 @@ export async function getSatelliteData(polygon: any): Promise<SatelliteData> {
       const validValues = ndviValues.filter((v): v is number => v !== null);
 
       if (validValues.length === 0) {
-        // All periods returned null — GEE had no imagery; fall back
         throw new Error('No GEE imagery available');
       }
 
-      // Fill any null periods with nearest neighbour
-      const filled = ndviValues.map((v, i) => {
+      const filled = ndviValues.map((v) => {
         if (v !== null) return v;
         const candidates = ndviValues.filter((x): x is number => x !== null);
         return candidates.length > 0 ? candidates[Math.floor(candidates.length / 2)] : 0.45;
@@ -262,15 +288,15 @@ export async function getSatelliteData(polygon: any): Promise<SatelliteData> {
       const variance = validValues.reduce((a, b) => a + (b - mean) ** 2, 0) / validValues.length;
 
       return {
-        mean_ndvi:       +currentNDVI.toFixed(3),
-        ndvi_trend:      +(currentNDVI - prevNDVI).toFixed(3),
-        ndvi_variance:   +Math.sqrt(variance).toFixed(3),
+        mean_ndvi:         +currentNDVI.toFixed(3),
+        ndvi_trend:        +(currentNDVI - prevNDVI).toFixed(3),
+        ndvi_variance:     +Math.sqrt(variance).toFixed(3),
         avg_temperature_c: +weatherData.avgTemp.toFixed(1),
         total_rainfall_mm: +weatherData.totalRain.toFixed(1),
-        data_source:     'Sentinel-2 (Google Earth Engine) + Open-Meteo',
-        region_type:     'satellite',
-        observation_date: new Date().toISOString().split('T')[0],
-        historical_ndvi: periods.map((p, i) => ({
+        data_source:       'Sentinel-2 (Google Earth Engine) + Open-Meteo',
+        region_type:       'satellite',
+        observation_date:  new Date().toISOString().split('T')[0],
+        historical_ndvi:   periods.map((p, i) => ({
           date:  p.label,
           value: +filled[i].toFixed(3),
         })),

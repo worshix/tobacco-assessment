@@ -48,38 +48,60 @@ function buildGrid(coordinates: number[][], size: number): [number, number][] {
   return points;
 }
 
+// GEE REST API v1 expression for NDVI at a single point.
+// Uses internal algorithm names (GeometryConstructors.Point, ImageCollection.load, etc.)
+// and 'input' as the primary argument for Image.* and ImageCollection.* algorithms.
 function buildPointNDVIExpression(lng: number, lat: number, startDate: string, endDate: string) {
+  const startMs = new Date(startDate).getTime();
+  const endMs = new Date(endDate).getTime();
   return {
     result: 'ndvi_value',
     values: {
       s2: {
         functionInvocationValue: {
-          functionName: 'ImageCollection',
+          functionName: 'ImageCollection.load',
           arguments: { id: { constantValue: 'COPERNICUS/S2_SR_HARMONIZED' } },
         },
       },
       pt: {
         functionInvocationValue: {
-          functionName: 'Geometry.Point',
+          functionName: 'GeometryConstructors.Point',
           arguments: { coordinates: { constantValue: [lng, lat] } },
         },
       },
-      by_bounds: {
+      date_start_filt: {
         functionInvocationValue: {
-          functionName: 'Collection.filterBounds',
+          functionName: 'Filter.greaterThanOrEquals',
+          arguments: {
+            leftField: { constantValue: 'system:time_start' },
+            rightValue: { constantValue: startMs },
+          },
+        },
+      },
+      date_end_filt: {
+        functionInvocationValue: {
+          functionName: 'Filter.lessThan',
+          arguments: {
+            leftField: { constantValue: 'system:time_start' },
+            rightValue: { constantValue: endMs },
+          },
+        },
+      },
+      by_start: {
+        functionInvocationValue: {
+          functionName: 'Collection.filter',
           arguments: {
             collection: { valueReference: 's2' },
-            geometry: { valueReference: 'pt' },
+            filter: { valueReference: 'date_start_filt' },
           },
         },
       },
       by_date: {
         functionInvocationValue: {
-          functionName: 'Collection.filterDate',
+          functionName: 'Collection.filter',
           arguments: {
-            collection: { valueReference: 'by_bounds' },
-            start: { constantValue: startDate },
-            end: { constantValue: endDate },
+            collection: { valueReference: 'by_start' },
+            filter: { valueReference: 'date_end_filt' },
           },
         },
       },
@@ -101,18 +123,24 @@ function buildPointNDVIExpression(lng: number, lat: number, startDate: string, e
           },
         },
       },
-      median: {
+      col_reducer: {
+        functionInvocationValue: { functionName: 'Reducer.mean', arguments: {} },
+      },
+      reduced: {
         functionInvocationValue: {
-          functionName: 'ImageCollection.median',
-          arguments: { imageCollection: { valueReference: 'filtered' } },
+          functionName: 'ImageCollection.reduce',
+          arguments: {
+            collection: { valueReference: 'filtered' },
+            reducer: { valueReference: 'col_reducer' },
+          },
         },
       },
       ndvi_img: {
         functionInvocationValue: {
           functionName: 'Image.normalizedDifference',
           arguments: {
-            image: { valueReference: 'median' },
-            bandNames: { constantValue: ['B8', 'B4'] },
+            input: { valueReference: 'reduced' },
+            bandNames: { constantValue: ['B8_mean', 'B4_mean'] },
           },
         },
       },
