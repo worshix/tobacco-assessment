@@ -26,7 +26,7 @@ model Field {
   area      Float?   // Calculated area in hectares
   location  String?  // Reverse geocoded location name
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   analyses  Analysis[]
   createdAt DateTime @default(now())
 }
@@ -34,7 +34,7 @@ model Field {
 model Analysis {
   id              String   @id @default(cuid())
   fieldId         String
-  field           Field    @relation(fields: [fieldId], references: [id])
+  field           Field    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
 
   meanNDVI        Float
   ndviTrend       NDVITrend
